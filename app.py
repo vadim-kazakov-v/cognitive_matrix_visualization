@@ -5,12 +5,19 @@ from sklearn.manifold import TSNE
 import random
 import itertools
 import json
+import logging
+from datetime import datetime
 
 app = Flask(__name__)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def check_constraints(matrix, constraints):
     """Check if a matrix satisfies all constraints"""
-    for constraint in constraints:
+    logger.info(f"Checking constraints for matrix of size {matrix.shape}")
+    for i, constraint in enumerate(constraints):
         cells = constraint['cells']
         constraint_type = constraint['type']
         value = constraint['value']
@@ -18,14 +25,20 @@ def check_constraints(matrix, constraints):
         # Calculate sum of specified cells
         cell_sum = sum(matrix[int(cell.split(',')[0])][int(cell.split(',')[1])] for cell in cells)
         
+        logger.debug(f"Constraint {i}: type={constraint_type}, cells={cells}, value={value}, sum={cell_sum}")
+        
         # Check constraint based on type
         if constraint_type == 'sum_greater' and cell_sum < value:
+            logger.debug(f"Constraint {i} failed: sum {cell_sum} < {value}")
             return False
         elif constraint_type == 'sum_less' and cell_sum > value:
+            logger.debug(f"Constraint {i} failed: sum {cell_sum} > {value}")
             return False
         elif constraint_type == 'sum_equal' and abs(cell_sum - value) > 1e-6:
+            logger.debug(f"Constraint {i} failed: sum {cell_sum} != {value}")
             return False
     
+    logger.info("All constraints satisfied")
     return True
 
 @app.route('/')
@@ -41,6 +54,8 @@ def generate_matrices():
         dimensionality = data['dimensionality']
         cell_ranges = data['cell_ranges']
         constraints = data['constraints']
+        
+        logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints")
         
         # Generate matrices based on cell ranges and constraints
         valid_matrices = []
@@ -81,8 +96,12 @@ def generate_matrices():
             
             attempts += 1
         
+        logger.info(f"Generated {len(valid_matrices)} valid matrices out of {attempts} attempts")
+        
         if len(valid_matrices) < num_matrices:
-            return jsonify({'error': f'Could only generate {len(valid_matrices)} out of {num_matrices} requested matrices. Try adjusting constraints or ranges.'}), 400
+            error_msg = f'Could only generate {len(valid_matrices)} out of {num_matrices} requested matrices. Try adjusting constraints or ranges.'
+            logger.warning(error_msg)
+            return jsonify({'error': error_msg}), 400
         
         # Prepare data for dimensionality reduction
         # Flatten eigenvalues to create feature vectors
@@ -104,11 +123,14 @@ def generate_matrices():
         # Convert to list for JSON serialization
         coords_list = coords.tolist()
         
+        logger.info("Successfully completed matrix generation and visualization processing")
+        
         return jsonify({
             'coordinates': coords_list,
             'eigenvalues': eigenvalues_list
         })
     except Exception as e:
+        logger.error(f"Error in generate_matrices: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
