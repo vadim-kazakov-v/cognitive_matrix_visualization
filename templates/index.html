@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Eigenvalue Visualizer</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .matrix-cell {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #eee;
+            display: inline-block;
+            width: 120px;
+        }
+        .constraint {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+        }
+        #plot {
+            width: 100%;
+            height: 600px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matrix Eigenvalue Visualizer</h1>
+        
+        <div class="form-section">
+            <h2>Matrix Configuration</h2>
+            <label for="matrixSize">Matrix Size (N x N): </label>
+            <input type="number" id="matrixSize" min="1" max="10" value="2">
+            <button id="generateMatrixForm">Generate Matrix Form</button>
+        </div>
+        
+        <div id="matrixFormContainer">
+            <!-- Matrix form will be generated here -->
+        </div>
+        
+        <div class="form-section">
+            <h2>Constraints</h2>
+            <button id="addConstraint">Add Constraint</button>
+            <div id="constraintsContainer">
+                <!-- Constraints will be added here -->
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Generation Parameters</h2>
+            <label for="numMatrices">Number of Matrices to Generate: </label>
+            <input type="number" id="numMatrices" min="1" max="1000" value="100">
+            <br><br>
+            <label for="dimensionality">Dimensionality for Visualization: </label>
+            <select id="dimensionality">
+                <option value="2">2D</option>
+                <option value="3">3D</option>
+            </select>
+            <br><br>
+            <button id="generate">Generate and Visualize</button>
+        </div>
+        
+        <div id="plot"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Generate matrix form based on size
+            $('#generateMatrixForm').click(function() {
+                const size = parseInt($('#matrixSize').val());
+                if (size < 1 || size > 10) {
+                    alert('Please enter a size between 1 and 10');
+                    return;
+                }
+                
+                let html = '<div class="form-section"><h2>Matrix Cell Ranges</h2>';
+                for (let i = 0; i < size; i++) {
+                    html += '<div style="margin-bottom: 10px;">';
+                    for (let j = 0; j < size; j++) {
+                        html += `
+                            <div class="matrix-cell">
+                                <div>Cell [${i}][${j}]</div>
+                                <label>Min: <input type="number" class="min-${i}-${j}" step="0.01" value="0"></label><br>
+                                <label>Max: <input type="number" class="max-${i}-${j}" step="0.01" value="1"></label><br>
+                                <label>Step: <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001"></label>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+                $('#matrixFormContainer').html(html);
+            });
+            
+            // Add constraint
+            let constraintCount = 0;
+            $('#addConstraint').click(function() {
+                const size = parseInt($('#matrixSize').val());
+                if (size < 1 || size > 10) {
+                    alert('Please generate matrix form first');
+                    return;
+                }
+                
+                let cellOptions = '';
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        cellOptions += `<option value="${i},${j}">[${i}][${j}]</option>`;
+                    }
+                }
+                
+                const constraintHtml = `
+                    <div class="constraint" id="constraint-${constraintCount}">
+                        <h3>Constraint ${constraintCount + 1}</h3>
+                        <label>Cells: </label>
+                        <select class="cell-select" multiple style="height: 100px;">
+                            ${cellOptions}
+                        </select><br><br>
+                        <label>Type: 
+                            <select class="constraint-type">
+                                <option value="sum_greater">Sum >= Value</option>
+                                <option value="sum_less">Sum <= Value</option>
+                                <option value="sum_equal">Sum = Value</option>
+                            </select>
+                        </label><br><br>
+                        <label>Value: <input type="number" class="constraint-value" step="0.01" value="1"></label>
+                        <button class="remove-constraint" data-id="${constraintCount}">Remove</button>
+                    </div>
+                `;
+                
+                $('#constraintsContainer').append(constraintHtml);
+                constraintCount++;
+            });
+            
+            // Remove constraint
+            $(document).on('click', '.remove-constraint', function() {
+                const id = $(this).data('id');
+                $('#constraint-' + id).remove();
+            });
+            
+            // Generate and visualize
+            $('#generate').click(function() {
+                const size = parseInt($('#matrixSize').val());
+                const numMatrices = parseInt($('#numMatrices').val());
+                const dimensionality = parseInt($('#dimensionality').val());
+                
+                // Collect matrix cell ranges
+                const cellRanges = {};
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        cellRanges[`${i},${j}`] = {
+                            min: parseFloat($(`.min-${i}-${j}`).val()),
+                            max: parseFloat($(`.max-${i}-${j}`).val()),
+                            step: parseFloat($(`.step-${i}-${j}`).val())
+                        };
+                    }
+                }
+                
+                // Collect constraints
+                const constraints = [];
+                $('.constraint').each(function() {
+                    const cellSelect = $(this).find('.cell-select')[0];
+                    const selectedCells = Array.from(cellSelect.selectedOptions).map(opt => opt.value);
+                    
+                    constraints.push({
+                        cells: selectedCells,
+                        type: $(this).find('.constraint-type').val(),
+                        value: parseFloat($(this).find('.constraint-value').val())
+                    });
+                });
+                
+                const data = {
+                    size: size,
+                    num_matrices: numMatrices,
+                    dimensionality: dimensionality,
+                    cell_ranges: cellRanges,
+                    constraints: constraints
+                };
+                
+                $.ajax({
+                    url: '/generate',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        const coords = response.coordinates;
+                        const eigenvalues = response.eigenvalues;
+                        
+                        // Prepare data for Plotly
+                        if (dimensionality === 2) {
+                            const trace = {
+                                x: coords.map(c => c[0]),
+                                y: coords.map(c => c[1]),
+                                mode: 'markers',
+                                type: 'scatter',
+                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
+                                marker: {
+                                    size: 8,
+                                    color: coords.map(c => c[0]),
+                                    colorscale: 'Viridis',
+                                    showscale: true
+                                }
+                            };
+                            
+                            const layout = {
+                                title: 'Matrix Eigenvalues Visualization (2D)',
+                                scene: {
+                                    xaxis: {title: 'Component 1'},
+                                    yaxis: {title: 'Component 2'}
+                                }
+                            };
+                            
+                            Plotly.newPlot('plot', [trace], layout);
+                        } else {
+                            const trace = {
+                                x: coords.map(c => c[0]),
+                                y: coords.map(c => c[1]),
+                                z: coords.map(c => c[2]),
+                                mode: 'markers',
+                                type: 'scatter3d',
+                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
+                                marker: {
+                                    size: 5,
+                                    color: coords.map(c => c[0]),
+                                    colorscale: 'Viridis',
+                                    showscale: true
+                                }
+                            };
+                            
+                            const layout = {
+                                title: 'Matrix Eigenvalues Visualization (3D)',
+                                scene: {
+                                    xaxis: {title: 'Component 1'},
+                                    yaxis: {title: 'Component 2'},
+                                    zaxis: {title: 'Component 3'}
+                                }
+                            };
+                            
+                            Plotly.newPlot('plot', [trace], layout);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error: ' + xhr.responseJSON.error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
