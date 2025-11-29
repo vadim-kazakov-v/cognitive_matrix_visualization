@@ -599,6 +599,30 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label for="algorithm"><i class="fas fa-project-diagram"></i> Dimensionality Reduction Algorithm</label>
+                    <select id="algorithm">
+                        <option value="tsne">t-SNE</option>
+                        <option value="umap">UMAP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inputType"><i class="fas fa-inbox"></i> Input for Algorithm</label>
+                    <select id="inputType">
+                        <option value="eigenvalues">Eigenvalues</option>
+                        <option value="eigenvectors">Eigenvectors</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="useImaginary">
+                        <input type="checkbox" id="useImaginary" value="true"> 
+                        <i class="fas fa-calculator"></i> Include Imaginary Components
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
                     <button id="generate" class="generate-btn">
                         <i class="fas fa-play-circle"></i> Generate and Visualize
                     </button>
@@ -952,7 +976,10 @@
                     dimensionality: dimensionality,
                     cell_ranges: cellRanges,
                     constraints: constraints,
-                    eigenvector_selection: $('#eigenvectorSelection').val()
+                    eigenvector_selection: $('#eigenvectorSelection').val(),
+                    algorithm: $('#algorithm').val(),
+                    input_type: $('#inputType').val(),
+                    use_imaginary: $('#useImaginary').is(':checked')
                 };
                 
                 // Show loading state
@@ -1258,6 +1285,9 @@
                     matrixSize: parseInt($('#matrixSize').val()),
                     numMatrices: parseInt($('#numMatrices').val()),
                     dimensionality: parseInt($('#dimensionality').val()),
+                    algorithm: $('#algorithm').val(),
+                    inputType: $('#inputType').val(),
+                    useImaginary: $('#useImaginary').is(':checked'),
                     cellRanges: {},
                     constraints: [],
                     timestamp: new Date().toISOString()
@@ -1360,6 +1390,25 @@
                 $('#matrixSize').val(configData.matrixSize);
                 $('#numMatrices').val(configData.numMatrices);
                 $('#dimensionality').val(configData.dimensionality);
+                
+                // Set new parameters if they exist in config, otherwise use defaults
+                if (configData.algorithm) {
+                    $('#algorithm').val(configData.algorithm);
+                } else {
+                    $('#algorithm').val('tsne'); // default
+                }
+                
+                if (configData.inputType) {
+                    $('#inputType').val(configData.inputType);
+                } else {
+                    $('#inputType').val('eigenvalues'); // default
+                }
+                
+                if (configData.useImaginary !== undefined) {
+                    $('#useImaginary').prop('checked', configData.useImaginary);
+                } else {
+                    $('#useImaginary').prop('checked', false); // default
+                }
                 
                 // Generate matrix form
                 $('#generateMatrixForm').click();

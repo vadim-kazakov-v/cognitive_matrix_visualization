@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import numpy as np
 from scipy.linalg import eigvals
 from sklearn.manifold import TSNE
+import umap
 import random
 import itertools
 import json
@@ -107,6 +108,9 @@ def generate_matrices():
         cell_ranges = data['cell_ranges']
         constraints = data['constraints']
         eigenvector_selection = data.get('eigenvector_selection', 'all')  # Default to 'all'
+        algorithm = data.get('algorithm', 'tsne')  # Default to 'tsne'
+        input_type = data.get('input_type', 'eigenvalues')  # Default to 'eigenvalues'
+        use_imaginary = data.get('use_imaginary', False)  # Default to False
         
         # Validate that num_matrices doesn't exceed maximum possible
         max_possible = calculate_max_matrices(size, cell_ranges)
@@ -189,30 +193,70 @@ def generate_matrices():
             logger.warning(error_msg)
             return jsonify({'error': error_msg}), 400
         
-        # Prepare data for dimensionality reduction
-        # Flatten eigenvalues to create feature vectors
-        eigenvalue_vectors = []
-        for ev_list in eigenvalues_list:
-            # Pad or truncate eigenvalue lists to fixed size for consistent features
-            vector = np.zeros(size * 2)  # Real and imaginary parts for max possible eigenvalues
-            for idx, ev in enumerate(ev_list):
-                if idx < size * 2:
+        # Prepare data for dimensionality reduction based on input_type
+        feature_vectors = []
+        
+        if input_type == 'eigenvectors':
+            # Use eigenvectors as input
+            for eigvec_list in eigenvectors_list:
+                # Flatten eigenvectors into a single feature vector
+                vector = []
+                for eigvec in eigvec_list:  # Each eigenvector in the list
+                    for component in eigvec:  # Each component of the eigenvector
+                        if isinstance(component, dict):  # Complex number represented as dict
+                            if use_imaginary:
+                                # Include both real and imaginary parts
+                                vector.extend([component['real'], component['imag']])
+                            else:
+                                # Use only real part
+                                vector.append(component['real'])
+                        else:
+                            vector.append(component)
+                # Pad or truncate to consistent size
+                target_size = size * size * (2 if use_imaginary else 1)  # Account for complex components
+                if len(vector) < target_size:
+                    vector.extend([0] * (target_size - len(vector)))
+                else:
+                    vector = vector[:target_size]
+                feature_vectors.append(vector)
+        else:  # input_type == 'eigenvalues' (default)
+            # Use eigenvalues as input
+            for ev_list in eigenvalues_list:
+                # Pad or truncate eigenvalue lists to fixed size for consistent features
+                vector = []
+                for ev in ev_list:
                     if isinstance(ev, dict):  # Complex number represented as dict
-                        vector[idx] = ev['real']  # Use real part for t-SNE
+                        if use_imaginary:
+                            # Include both real and imaginary parts
+                            vector.extend([ev['real'], ev['imag']])
+                        else:
+                            # Use only real part
+                            vector.append(ev['real'])
                     else:
-                        vector[idx] = ev
-            eigenvalue_vectors.append(vector)
+                        vector.append(ev)
+                
+                # Pad with zeros if needed
+                target_size = size * (2 if use_imaginary else 1)  # Account for complex components
+                if len(vector) < target_size:
+                    vector.extend([0] * (target_size - len(vector)))
+                else:
+                    vector = vector[:target_size]
+                feature_vectors.append(vector)
         
-        eigenvalue_vectors = np.array(eigenvalue_vectors)
+        feature_vectors = np.array(feature_vectors)
         
-        # Apply t-SNE for dimensionality reduction
+        # Apply dimensionality reduction algorithm based on selection
         if len(valid_matrices) == 1:
             # If there's only one matrix, create coordinates manually
             coords = np.array([[0] * dimensionality])  # Single point at origin
         else:
-            perplexity_val = min(30, max(1, len(valid_matrices)-1))  # Ensure perplexity is at least 1 and less than n_samples
-            tsne = TSNE(n_components=dimensionality, random_state=42, perplexity=perplexity_val)
-            coords = tsne.fit_transform(eigenvalue_vectors)
+            if algorithm == 'umap':
+                reducer = umap.UMAP(n_components=dimensionality, random_state=42)
+                coords = reducer.fit_transform(feature_vectors)
+            else:  # algorithm == 'tsne' (default)
+                perplexity_val = min(30, max(1, len(valid_matrices)-1))  # Ensure perplexity is at least 1 and less than n_samples
+                tsne = TSNE(n_components=dimensionality, random_state=42, perplexity=perplexity_val)
+                coords = tsne.fit_transform(feature_vectors)
         
         # Convert to list for JSON serialization
         coords_list = coords.tolist()
