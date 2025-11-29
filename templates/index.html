@@ -6,54 +6,338 @@
     <title>Matrix Eigenvalue Visualizer</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --bg-card: #0d1b2a;
+            --text-primary: #e6e6e6;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #64ffda;
+            --accent-secondary: #5e9bff;
+            --border-color: #2a3a5a;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --danger: #f87171;
         }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
         .form-section {
+            background-color: var(--bg-secondary);
+            margin-bottom: 25px;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-section h2 {
             margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .matrix-cell {
-            margin: 5px;
-            padding: 10px;
-            border: 1px solid #eee;
-            display: inline-block;
-            width: 120px;
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        .constraint {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 3px;
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
         }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 0 3px rgba(94, 155, 255, 0.2);
+        }
+        
         button {
-            margin: 5px;
-            padding: 8px 15px;
+            background-color: var(--accent-secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
+        
+        button:hover {
+            background-color: #4a8de0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 155, 255, 0.3);
+        }
+        
+        button.secondary {
+            background-color: var(--bg-tertiary);
+        }
+        
+        button.secondary:hover {
+            background-color: #2a3a5a;
+        }
+        
+        button.danger {
+            background-color: var(--danger);
+        }
+        
+        button.danger:hover {
+            background-color: #ef4444;
+        }
+        
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .matrix-cell {
+            background-color: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .matrix-cell h4 {
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+        }
+        
+        .constraint {
+            background-color: var(--bg-tertiary);
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-secondary);
+            position: relative;
+        }
+        
+        .constraint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .constraint h3 {
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .constraint-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .constraint-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .constraint-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .constraint-cell-selector {
+            margin-bottom: 15px;
+        }
+        
+        .constraint-cell-selector select {
+            height: 150px;
+            width: 100%;
+        }
+        
+        .constraint-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
         #plot {
             width: 100%;
-            height: 600px;
+            height: 700px;
+            margin-top: 30px;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 20px;
             margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background-color: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .constraint-tag {
+            display: inline-block;
+            background-color: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.8rem;
+        }
+        
+        .instructions {
+            background-color: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .instructions h3 {
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Matrix Eigenvalue Visualizer</h1>
+        <header>
+            <h1><i class="fas fa-project-diagram"></i> Matrix Eigenvalue Visualizer</h1>
+            <p class="subtitle">Advanced matrix analysis with constraint-based generation and visualization</p>
+        </header>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> How to use this tool</h3>
+            <ul>
+                <li>Set your matrix size and click "Generate Matrix Form" to configure cell ranges</li>
+                <li>Define constraints to limit the possible values of your matrices</li>
+                <li>Specify generation parameters and click "Generate and Visualize"</li>
+                <li>Use the interactive plot to explore eigenvalue relationships</li>
+            </ul>
+        </div>
         
         <div class="form-section">
-            <h2>Matrix Configuration</h2>
-            <label for="matrixSize">Matrix Size (N x N): </label>
-            <input type="number" id="matrixSize" min="1" max="10" value="2">
-            <button id="generateMatrixForm">Generate Matrix Form</button>
+            <h2><i class="fas fa-sliders-h"></i> Matrix Configuration</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="matrixSize"><i class="fas fa-border-all"></i> Matrix Size (N x N)</label>
+                    <input type="number" id="matrixSize" min="1" max="10" value="2">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button id="generateMatrixForm">
+                        <i class="fas fa-cogs"></i> Generate Matrix Form
+                    </button>
+                </div>
+            </div>
         </div>
         
         <div id="matrixFormContainer">
@@ -61,32 +345,78 @@
         </div>
         
         <div class="form-section">
-            <h2>Constraints</h2>
-            <button id="addConstraint">Add Constraint</button>
+            <h2><i class="fas fa-balance-scale"></i> Constraints</h2>
+            <button id="addConstraint">
+                <i class="fas fa-plus-circle"></i> Add Constraint
+            </button>
             <div id="constraintsContainer">
                 <!-- Constraints will be added here -->
             </div>
         </div>
         
         <div class="form-section">
-            <h2>Generation Parameters</h2>
-            <label for="numMatrices">Number of Matrices to Generate: </label>
-            <input type="number" id="numMatrices" min="1" max="1000" value="100">
-            <br><br>
-            <label for="dimensionality">Dimensionality for Visualization: </label>
-            <select id="dimensionality">
-                <option value="2">2D</option>
-                <option value="3">3D</option>
-            </select>
-            <br><br>
-            <button id="generate">Generate and Visualize</button>
+            <h2><i class="fas fa-cogs"></i> Generation Parameters</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="numMatrices"><i class="fas fa-calculator"></i> Number of Matrices to Generate</label>
+                    <input type="number" id="numMatrices" min="1" max="1000" value="100">
+                </div>
+                <div class="form-group">
+                    <label for="dimensionality"><i class="fas fa-chart-line"></i> Dimensionality for Visualization</label>
+                    <select id="dimensionality">
+                        <option value="2">2D Visualization</option>
+                        <option value="3">3D Visualization</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <button id="generate" class="generate-btn">
+                        <i class="fas fa-play-circle"></i> Generate and Visualize
+                    </button>
+                </div>
+            </div>
         </div>
         
         <div id="plot"></div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">Matrices Generated</div>
+                <div class="stat-value" id="matrices-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Constraints</div>
+                <div class="stat-value" id="constraints-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Matrix Size</div>
+                <div class="stat-value" id="size-value">2x2</div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Matrix Eigenvalue Visualizer &copy; 2025 | Advanced Constraint-Based Matrix Analysis</p>
+        </footer>
     </div>
 
     <script>
         $(document).ready(function() {
+            // Update stats when form changes
+            function updateStats() {
+                const size = parseInt($('#matrixSize').val()) || 0;
+                const constraints = $('.constraint').length;
+                const matrices = parseInt($('#numMatrices').val()) || 0;
+                
+                $('#size-value').text(`${size}x${size}`);
+                $('#constraints-count').text(constraints);
+                $('#matrices-count').text(matrices);
+            }
+            
+            // Listen for changes to update stats
+            $('#matrixSize, #numMatrices').on('input', updateStats);
+            updateStats();
+            
             // Generate matrix form based on size
             $('#generateMatrixForm').click(function() {
                 const size = parseInt($('#matrixSize').val());
@@ -95,23 +425,35 @@
                     return;
                 }
                 
-                let html = '<div class="form-section"><h2>Matrix Cell Ranges</h2>';
+                let html = '<div class="form-section"><h2><i class="fas fa-table"></i> Matrix Cell Ranges</h2>';
+                html += '<div class="matrix-grid">';
+                
                 for (let i = 0; i < size; i++) {
-                    html += '<div style="margin-bottom: 10px;">';
                     for (let j = 0; j < size; j++) {
                         html += `
                             <div class="matrix-cell">
-                                <div>Cell [${i}][${j}]</div>
-                                <label>Min: <input type="number" class="min-${i}-${j}" step="0.01" value="0"></label><br>
-                                <label>Max: <input type="number" class="max-${i}-${j}" step="0.01" value="1"></label><br>
-                                <label>Step: <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001"></label>
+                                <h4>Cell [${i}][${j}]</h4>
+                                <div class="form-group">
+                                    <label>Min</label>
+                                    <input type="number" class="min-${i}-${j}" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max</label>
+                                    <input type="number" class="max-${i}-${j}" step="0.01" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Step</label>
+                                    <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001">
+                                </div>
                             </div>
                         `;
                     }
-                    html += '</div>';
                 }
-                html += '</div>';
+                html += '</div></div>';
                 $('#matrixFormContainer').html(html);
+                
+                // Update stats after generating matrix form
+                updateStats();
             });
             
             // Add constraint
@@ -132,31 +474,53 @@
                 
                 const constraintHtml = `
                     <div class="constraint" id="constraint-${constraintCount}">
-                        <h3>Constraint ${constraintCount + 1}</h3>
-                        <label>Cells: </label>
-                        <select class="cell-select" multiple style="height: 100px;">
-                            ${cellOptions}
-                        </select><br><br>
-                        <label>Type: 
-                            <select class="constraint-type">
-                                <option value="sum_greater">Sum >= Value</option>
-                                <option value="sum_less">Sum <= Value</option>
-                                <option value="sum_equal">Sum = Value</option>
-                            </select>
-                        </label><br><br>
-                        <label>Value: <input type="number" class="constraint-value" step="0.01" value="1"></label>
-                        <button class="remove-constraint" data-id="${constraintCount}">Remove</button>
+                        <div class="constraint-header">
+                            <h3><i class="fas fa-ruler-combined"></i> Constraint ${constraintCount + 1}</h3>
+                            <div class="constraint-controls">
+                                <button class="remove-constraint secondary" data-id="${constraintCount}">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <div class="constraint-content">
+                            <div class="constraint-cell-selector">
+                                <label>Cells to include in constraint:</label>
+                                <select class="cell-select" multiple>
+                                    ${cellOptions}
+                                </select>
+                            </div>
+                            <div class="constraint-options">
+                                <div class="form-group">
+                                    <label>Type of constraint:</label>
+                                    <select class="constraint-type">
+                                        <option value="sum_greater">Sum is greater than or equal to value</option>
+                                        <option value="sum_less">Sum is less than or equal to value</option>
+                                        <option value="sum_equal">Sum equals value</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Constraint value:</label>
+                                    <input type="number" class="constraint-value" step="0.01" value="1">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
                 
                 $('#constraintsContainer').append(constraintHtml);
                 constraintCount++;
+                
+                // Update stats after adding constraint
+                updateStats();
             });
             
             // Remove constraint
             $(document).on('click', '.remove-constraint', function() {
                 const id = $(this).data('id');
                 $('#constraint-' + id).remove();
+                
+                // Update stats after removing constraint
+                updateStats();
             });
             
             // Generate and visualize
@@ -198,6 +562,12 @@
                     constraints: constraints
                 };
                 
+                // Show loading state
+                const generateBtn = $('#generate');
+                const originalText = generateBtn.html();
+                generateBtn.html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+                generateBtn.prop('disabled', true);
+                
                 $.ajax({
                     url: '/generate',
                     method: 'POST',
@@ -216,15 +586,34 @@
                                 type: 'scatter',
                                 text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
                                 marker: {
-                                    size: 8,
+                                    size: 10,
                                     color: coords.map(c => c[0]),
                                     colorscale: 'Viridis',
-                                    showscale: true
+                                    showscale: true,
+                                    line: {
+                                        color: 'white',
+                                        width: 0.5
+                                    }
                                 }
                             };
                             
                             const layout = {
                                 title: 'Matrix Eigenvalues Visualization (2D)',
+                                paper_bgcolor: 'rgba(10, 20, 30, 0.8)',
+                                plot_bgcolor: 'rgba(15, 25, 40, 0.8)',
+                                font: {
+                                    color: '#e6e6e6'
+                                },
+                                xaxis: {
+                                    title: 'Component 1',
+                                    gridcolor: '#2a3a5a',
+                                    zerolinecolor: '#2a3a5a'
+                                },
+                                yaxis: {
+                                    title: 'Component 2',
+                                    gridcolor: '#2a3a5a',
+                                    zerolinecolor: '#2a3a5a'
+                                },
                                 scene: {
                                     xaxis: {title: 'Component 1'},
                                     yaxis: {title: 'Component 2'}
@@ -241,7 +630,7 @@
                                 type: 'scatter3d',
                                 text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
                                 marker: {
-                                    size: 5,
+                                    size: 6,
                                     color: coords.map(c => c[0]),
                                     colorscale: 'Viridis',
                                     showscale: true
@@ -250,10 +639,15 @@
                             
                             const layout = {
                                 title: 'Matrix Eigenvalues Visualization (3D)',
+                                paper_bgcolor: 'rgba(10, 20, 30, 0.8)',
+                                plot_bgcolor: 'rgba(15, 25, 40, 0.8)',
+                                font: {
+                                    color: '#e6e6e6'
+                                },
                                 scene: {
-                                    xaxis: {title: 'Component 1'},
-                                    yaxis: {title: 'Component 2'},
-                                    zaxis: {title: 'Component 3'}
+                                    xaxis: {title: 'Component 1', gridcolor: '#2a3a5a'},
+                                    yaxis: {title: 'Component 2', gridcolor: '#2a3a5a'},
+                                    zaxis: {title: 'Component 3', gridcolor: '#2a3a5a'}
                                 }
                             };
                             
@@ -262,6 +656,11 @@
                     },
                     error: function(xhr, status, error) {
                         alert('Error: ' + xhr.responseJSON.error);
+                    },
+                    complete: function() {
+                        // Reset button state
+                        generateBtn.html(originalText);
+                        generateBtn.prop('disabled', false);
                     }
                 });
             });
