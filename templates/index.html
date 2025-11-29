@@ -223,16 +223,19 @@
         }
         
         .matrix-cell-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-            gap: 5px;
+            display: inline-block;
             margin-top: 15px;
-            max-width: 400px;
+            border: 1px solid var(--border-color);
+            border-collapse: collapse;
+        }
+        
+        .matrix-cell-grid tr, .matrix-cell-grid td {
+            border: 1px solid var(--border-color);
         }
         
         .matrix-cell-item {
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -242,6 +245,7 @@
             cursor: pointer;
             font-size: 0.8rem;
             transition: all 0.2s ease;
+            margin: 1px;
         }
         
         .matrix-cell-item.selected {
@@ -258,25 +262,41 @@
             background-color: #5e9bff;
         }
         
-        .matrix-input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+        .matrix-input-table-container {
+            overflow-x: auto;
             margin-top: 15px;
         }
         
-        .matrix-input-cell {
+        .matrix-input-table {
+            width: 100%;
+            border-collapse: collapse;
             background-color: var(--bg-tertiary);
-            padding: 15px;
-            border-radius: 8px;
             border: 1px solid var(--border-color);
-            text-align: center;
+            border-radius: 8px;
+            overflow: hidden;
         }
         
-        .matrix-input-cell h4 {
-            margin-bottom: 10px;
+        .matrix-input-table th {
+            background-color: var(--bg-secondary);
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
             color: var(--accent-primary);
-            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .matrix-input-table td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        
+        .matrix-input-table .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .matrix-input-table .form-group:last-child {
+            margin-bottom: 0;
         }
         
         .modal {
@@ -360,6 +380,26 @@
             background-color: var(--bg-tertiary);
             border-radius: 8px;
             border: 1px solid var(--border-color);
+        }
+        
+        .eigenvector-controls {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: var(--bg-secondary);
+            border-radius: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .eigenvector-controls label {
+            font-weight: 500;
+            color: var(--accent-primary);
+        }
+        
+        .eigenvector-controls select {
+            min-width: 150px;
         }
         
         .eigenvector-grid {
@@ -615,30 +655,39 @@
                 }
                 
                 let html = '<div class="form-section"><h2><i class="fas fa-table"></i> Matrix Cell Ranges</h2>';
-                html += '<div class="matrix-input-grid">';
+                html += '<div class="matrix-input-table-container">';
+                html += '<table class="matrix-input-table">';
                 
-                for (let i = 0; i < size; i++) {
-                    for (let j = 0; j < size; j++) {
-                        html += `
-                            <div class="matrix-input-cell">
-                                <h4>Cell [${i}][${j}]</h4>
-                                <div class="form-group">
-                                    <label>Min</label>
-                                    <input type="number" class="min-${i}-${j}" step="0.01" value="0">
-                                </div>
-                                <div class="form-group">
-                                    <label>Max</label>
-                                    <input type="number" class="max-${i}-${j}" step="0.01" value="1">
-                                </div>
-                                <div class="form-group">
-                                    <label>Step</label>
-                                    <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001">
-                                </div>
-                            </div>
-                        `;
-                    }
+                // Add header row with column indices
+                html += '<thead><tr><th></th>';
+                for (let j = 0; j < size; j++) {
+                    html += `<th>Col ${j}</th>`;
                 }
-                html += '</div></div>';
+                html += '</tr></thead>';
+                
+                html += '<tbody>';
+                for (let i = 0; i < size; i++) {
+                    html += `<tr>`;
+                    html += `<th>Row ${i}</th>`;
+                    for (let j = 0; j < size; j++) {
+                        html += `<td class="matrix-cell-input">
+                            <div class="form-group">
+                                <label>Min</label>
+                                <input type="number" class="min-${i}-${j}" step="0.01" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Max</label>
+                                <input type="number" class="max-${i}-${j}" step="0.01" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Step</label>
+                                <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001">
+                            </div>
+                        </td>`;
+                    }
+                    html += '</tr>';
+                }
+                html += '</tbody></table></div></div>';
                 $('#matrixFormContainer').html(html);
                 
                 // Update stats after generating matrix form
