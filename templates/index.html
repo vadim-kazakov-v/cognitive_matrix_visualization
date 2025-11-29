@@ -905,7 +905,23 @@
                 // Create matrix display HTML
                 let matrixDisplayHTML = '<div class="matrix-display">';
                 matrixDisplayHTML += `<h3>Matrix ${matrixIndex + 1}</h3>`;
-                matrixDisplayHTML += `<p><strong>Eigenvalues:</strong> ${eigenvalues.map(v => v.toFixed(3)).join(', ')}</p>`;
+                
+                // Format eigenvalues (handle complex numbers)
+                const formattedEigenvalues = eigenvalues.map(val => {
+                    if (typeof val === 'object' && val !== null && 'real' in val && 'imag' in val) {
+                        // Complex number object
+                        if (val.imag === 0) {
+                            return val.real.toFixed(3);
+                        } else {
+                            return `${val.real.toFixed(3)} + ${val.imag.toFixed(3)}i`;
+                        }
+                    } else {
+                        // Regular number
+                        return val.toFixed(3);
+                    }
+                });
+                
+                matrixDisplayHTML += `<p><strong>Eigenvalues:</strong> ${formattedEigenvalues.join(', ')}</p>`;
                 
                 // Create grid for matrix
                 matrixDisplayHTML += '<div class="matrix-display">';
@@ -930,7 +946,20 @@
                         
                         // Display eigenvector components
                         for (let j = 0; j < eigenvectors.length; j++) {
-                            matrixDisplayHTML += `<p>Component ${j}: ${eigenvectors[j][i].toFixed(3)}</p>`;
+                            const component = eigenvectors[j][i];
+                            let formattedComponent;
+                            if (typeof component === 'object' && component !== null && 'real' in component && 'imag' in component) {
+                                // Complex number object
+                                if (component.imag === 0) {
+                                    formattedComponent = component.real.toFixed(3);
+                                } else {
+                                    formattedComponent = `${component.real.toFixed(3)} + ${component.imag.toFixed(3)}i`;
+                                }
+                            } else {
+                                // Regular number
+                                formattedComponent = component.toFixed(3);
+                            }
+                            matrixDisplayHTML += `<p>Component ${j}: ${formattedComponent}</p>`;
                         }
                         
                         matrixDisplayHTML += '</div>';

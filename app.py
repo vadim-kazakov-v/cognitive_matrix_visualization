@@ -91,14 +91,34 @@ def generate_matrices():
                 
                 # Calculate eigenvalues and eigenvectors
                 eigenvalues = eigvals(matrix)
-                # Extract real parts of eigenvalues
-                real_eigenvalues = np.real(eigenvalues).tolist()
-                eigenvalues_list.append(real_eigenvalues)
+                # Extract real parts of eigenvalues and handle complex numbers
+                processed_eigenvalues = []
+                for ev in eigenvalues:
+                    if isinstance(ev, complex):
+                        if ev.imag == 0:
+                            processed_eigenvalues.append(float(ev.real))
+                        else:
+                            processed_eigenvalues.append({'real': float(ev.real), 'imag': float(ev.imag)})
+                    else:
+                        processed_eigenvalues.append(float(ev))
+                eigenvalues_list.append(processed_eigenvalues)
                 
                 # Calculate eigenvectors
                 eigenvals, eigenvecs = np.linalg.eig(matrix)
-                # Convert eigenvectors to lists for JSON serialization
-                eigenvectors_list.append(eigenvecs.tolist())
+                # Convert eigenvectors to lists for JSON serialization and handle complex numbers
+                processed_eigenvectors = []
+                for col in eigenvecs.T:  # Transpose to get column vectors
+                    processed_col = []
+                    for component in col:
+                        if isinstance(component, complex):
+                            if component.imag == 0:
+                                processed_col.append(float(component.real))
+                            else:
+                                processed_col.append({'real': float(component.real), 'imag': float(component.imag)})
+                        else:
+                            processed_col.append(float(component))
+                    processed_eigenvectors.append(processed_col)
+                eigenvectors_list.append(processed_eigenvectors)
             
             attempts += 1
         
@@ -117,14 +137,22 @@ def generate_matrices():
             vector = np.zeros(size * 2)  # Real and imaginary parts for max possible eigenvalues
             for idx, ev in enumerate(ev_list):
                 if idx < size * 2:
-                    vector[idx] = ev
+                    if isinstance(ev, dict):  # Complex number represented as dict
+                        vector[idx] = ev['real']  # Use real part for t-SNE
+                    else:
+                        vector[idx] = ev
             eigenvalue_vectors.append(vector)
         
         eigenvalue_vectors = np.array(eigenvalue_vectors)
         
         # Apply t-SNE for dimensionality reduction
-        tsne = TSNE(n_components=dimensionality, random_state=42, perplexity=min(30, len(valid_matrices)-1))
-        coords = tsne.fit_transform(eigenvalue_vectors)
+        if len(valid_matrices) == 1:
+            # If there's only one matrix, create coordinates manually
+            coords = np.array([[0] * dimensionality])  # Single point at origin
+        else:
+            perplexity_val = min(30, max(1, len(valid_matrices)-1))  # Ensure perplexity is at least 1 and less than n_samples
+            tsne = TSNE(n_components=dimensionality, random_state=42, perplexity=perplexity_val)
+            coords = tsne.fit_transform(eigenvalue_vectors)
         
         # Convert to list for JSON serialization
         coords_list = coords.tolist()
