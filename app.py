@@ -60,6 +60,7 @@ def generate_matrices():
         # Generate matrices based on cell ranges and constraints
         valid_matrices = []
         eigenvalues_list = []
+        eigenvectors_list = []
         
         attempts = 0
         max_attempts = num_matrices * 10  # Limit attempts to prevent infinite loop
@@ -86,13 +87,18 @@ def generate_matrices():
             
             # Check if matrix satisfies all constraints
             if check_constraints(matrix, constraints):
-                valid_matrices.append(matrix)
+                valid_matrices.append(matrix.copy())  # Store a copy of the matrix
                 
-                # Calculate eigenvalues
+                # Calculate eigenvalues and eigenvectors
                 eigenvalues = eigvals(matrix)
                 # Extract real parts of eigenvalues
                 real_eigenvalues = np.real(eigenvalues).tolist()
                 eigenvalues_list.append(real_eigenvalues)
+                
+                # Calculate eigenvectors
+                eigenvals, eigenvecs = np.linalg.eig(matrix)
+                # Convert eigenvectors to lists for JSON serialization
+                eigenvectors_list.append(eigenvecs.tolist())
             
             attempts += 1
         
@@ -123,11 +129,16 @@ def generate_matrices():
         # Convert to list for JSON serialization
         coords_list = coords.tolist()
         
+        # Convert matrices to lists for JSON serialization
+        matrices_list = [matrix.tolist() for matrix in valid_matrices]
+        
         logger.info("Successfully completed matrix generation and visualization processing")
         
         return jsonify({
             'coordinates': coords_list,
-            'eigenvalues': eigenvalues_list
+            'eigenvalues': eigenvalues_list,
+            'matrices': matrices_list,  # Include the original matrices
+            'eigenvectors': eigenvectors_list  # Include the eigenvectors
         })
     except Exception as e:
         logger.error(f"Error in generate_matrices: {str(e)}", exc_info=True)

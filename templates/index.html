@@ -222,6 +222,165 @@
             width: 100%;
         }
         
+        .matrix-cell-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 5px;
+            margin-top: 15px;
+            max-width: 400px;
+        }
+        
+        .matrix-cell-item {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+        
+        .matrix-cell-item.selected {
+            background-color: var(--accent-secondary);
+            color: white;
+            border-color: var(--accent-secondary);
+        }
+        
+        .matrix-cell-item:hover {
+            background-color: #2a3a5a;
+        }
+        
+        .matrix-cell-item.selected:hover {
+            background-color: #5e9bff;
+        }
+        
+        .matrix-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .matrix-input-cell {
+            background-color: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .matrix-input-cell h4 {
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+            font-size: 0.9rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .modal-content {
+            background-color: var(--bg-secondary);
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            color: var(--text-primary);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+        }
+        
+        .close {
+            color: var(--text-secondary);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: var(--danger);
+        }
+        
+        .matrix-display {
+            display: grid;
+            gap: 2px;
+            margin: 20px 0;
+        }
+        
+        .matrix-display-row {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .matrix-display-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+        
+        .config-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .eigenvector-visualization {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .eigenvector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .eigenvector-cell {
+            background-color: var(--bg-card);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .eigenvector-cell h4 {
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+        
         .constraint-options {
             display: flex;
             flex-direction: column;
@@ -398,6 +557,36 @@
         <footer>
             <p>Matrix Eigenvalue Visualizer &copy; 2025 | Advanced Constraint-Based Matrix Analysis</p>
         </footer>
+        
+        <!-- Modal for displaying matrices -->
+        <div id="matrixModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Matrix Details</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div id="matrixContent">
+                    <!-- Matrix content will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Config controls -->
+        <div class="form-section config-controls">
+            <div class="form-group">
+                <label for="configName"><i class="fas fa-file-import"></i> Configuration Name</label>
+                <input type="text" id="configName" placeholder="Enter configuration name">
+            </div>
+            <div class="form-group">
+                <button id="saveConfig">
+                    <i class="fas fa-save"></i> Save Configuration
+                </button>
+                <button id="loadConfig">
+                    <i class="fas fa-folder-open"></i> Load Configuration
+                </button>
+                <input type="file" id="configFile" style="display: none;" accept=".json">
+            </div>
+        </div>
     </div>
 
     <script>
@@ -426,12 +615,12 @@
                 }
                 
                 let html = '<div class="form-section"><h2><i class="fas fa-table"></i> Matrix Cell Ranges</h2>';
-                html += '<div class="matrix-grid">';
+                html += '<div class="matrix-input-grid">';
                 
                 for (let i = 0; i < size; i++) {
                     for (let j = 0; j < size; j++) {
                         html += `
-                            <div class="matrix-cell">
+                            <div class="matrix-input-cell">
                                 <h4>Cell [${i}][${j}]</h4>
                                 <div class="form-group">
                                     <label>Min</label>
@@ -472,6 +661,14 @@
                     }
                 }
                 
+                let matrixGridHtml = '<div class="matrix-cell-grid" data-constraint-id="${constraintCount}">';
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        matrixGridHtml += `<div class="matrix-cell-item" data-cell="${i},${j}">[${i}][${j}]</div>`;
+                    }
+                }
+                matrixGridHtml += '</div>';
+                
                 const constraintHtml = `
                     <div class="constraint" id="constraint-${constraintCount}">
                         <div class="constraint-header">
@@ -484,10 +681,9 @@
                         </div>
                         <div class="constraint-content">
                             <div class="constraint-cell-selector">
-                                <label>Cells to include in constraint:</label>
-                                <select class="cell-select" multiple>
-                                    ${cellOptions}
-                                </select>
+                                <label>Click on cells to select/deselect:</label>
+                                ${matrixGridHtml}
+                                <div class="selected-cells-info">Selected: <span class="selected-count">0</span> cells</div>
                             </div>
                             <div class="constraint-options">
                                 <div class="form-group">
@@ -544,8 +740,12 @@
                 // Collect constraints
                 const constraints = [];
                 $('.constraint').each(function() {
-                    const cellSelect = $(this).find('.cell-select')[0];
-                    const selectedCells = Array.from(cellSelect.selectedOptions).map(opt => opt.value);
+                    // Get selected cells from the visual grid instead of the select element
+                    const constraintId = $(this).attr('id').replace('constraint-', '');
+                    const selectedCells = [];
+                    $(`.matrix-cell-grid[data-constraint-id="${constraintId}"] .matrix-cell-item.selected`).each(function() {
+                        selectedCells.push($(this).data('cell'));
+                    });
                     
                     constraints.push({
                         cells: selectedCells,
@@ -576,6 +776,8 @@
                     success: function(response) {
                         const coords = response.coordinates;
                         const eigenvalues = response.eigenvalues;
+                        const matrices = response.matrices; // Get the original matrices
+                        const eigenvectors = response.eigenvectors; // Get the eigenvectors
                         
                         // Prepare data for Plotly
                         if (dimensionality === 2) {
@@ -621,6 +823,12 @@
                             };
                             
                             Plotly.newPlot('plot', [trace], layout);
+                            
+                            // Add click event to show matrix details
+                            $('#plot').off('plotly_click').on('plotly_click', function(data) {
+                                const pointIndex = data.points[0].pointNumber;
+                                showMatrixDetails(pointIndex, eigenvalues[pointIndex], matrices[pointIndex], eigenvectors[pointIndex]);
+                            });
                         } else {
                             const trace = {
                                 x: coords.map(c => c[0]),
@@ -652,6 +860,12 @@
                             };
                             
                             Plotly.newPlot('plot', [trace], layout);
+                            
+                            // Add click event to show matrix details
+                            $('#plot').off('plotly_click').on('plotly_click', function(data) {
+                                const pointIndex = data.points[0].pointNumber;
+                                showMatrixDetails(pointIndex, eigenvalues[pointIndex], matrices[pointIndex], eigenvectors[pointIndex]);
+                            });
                         }
                     },
                     error: function(xhr, status, error) {
@@ -664,6 +878,195 @@
                     }
                 });
             });
+            
+            // Matrix cell selection for constraints
+            $(document).on('click', '.matrix-cell-item', function() {
+                $(this).toggleClass('selected');
+                
+                // Update the selected count for this constraint
+                const constraintId = $(this).closest('.matrix-cell-grid').data('constraint-id');
+                const selectedCount = $(`.matrix-cell-grid[data-constraint-id="${constraintId}"] .matrix-cell-item.selected`).length;
+                $(`.matrix-cell-grid[data-constraint-id="${constraintId}"]`).siblings('.selected-cells-info').find('.selected-count').text(selectedCount);
+            });
+            
+            // Modal functionality
+            $('.close').click(function() {
+                $('#matrixModal').hide();
+            });
+            
+            $(window).click(function(event) {
+                if (event.target.id === 'matrixModal') {
+                    $('#matrixModal').hide();
+                }
+            });
+            
+            // Function to show matrix details in modal
+            function showMatrixDetails(matrixIndex, eigenvalues, matrix, eigenvectors) {
+                // Create matrix display HTML
+                let matrixDisplayHTML = '<div class="matrix-display">';
+                matrixDisplayHTML += `<h3>Matrix ${matrixIndex + 1}</h3>`;
+                matrixDisplayHTML += `<p><strong>Eigenvalues:</strong> ${eigenvalues.map(v => v.toFixed(3)).join(', ')}</p>`;
+                
+                // Create grid for matrix
+                matrixDisplayHTML += '<div class="matrix-display">';
+                for (let i = 0; i < matrix.length; i++) {
+                    matrixDisplayHTML += '<div class="matrix-display-row">';
+                    for (let j = 0; j < matrix[i].length; j++) {
+                        matrixDisplayHTML += `<div class="matrix-display-cell">${matrix[i][j].toFixed(3)}</div>`;
+                    }
+                    matrixDisplayHTML += '</div>';
+                }
+                matrixDisplayHTML += '</div>';
+                
+                // Add eigenvector visualization
+                if (eigenvectors && eigenvectors.length > 0) {
+                    matrixDisplayHTML += '<div class="eigenvector-visualization">';
+                    matrixDisplayHTML += '<h3>Eigenvectors</h3>';
+                    matrixDisplayHTML += '<div class="eigenvector-grid">';
+                    
+                    for (let i = 0; i < eigenvectors[0].length; i++) {  // For each eigenvector
+                        matrixDisplayHTML += '<div class="eigenvector-cell">';
+                        matrixDisplayHTML += `<h4>Eigenvector ${i + 1}</h4>`;
+                        
+                        // Display eigenvector components
+                        for (let j = 0; j < eigenvectors.length; j++) {
+                            matrixDisplayHTML += `<p>Component ${j}: ${eigenvectors[j][i].toFixed(3)}</p>`;
+                        }
+                        
+                        matrixDisplayHTML += '</div>';
+                    }
+                    matrixDisplayHTML += '</div>';
+                    matrixDisplayHTML += '</div>';
+                }
+                
+                matrixDisplayHTML += '</div>';
+                
+                $('#matrixContent').html(matrixDisplayHTML);
+                $('#matrixModal').show();
+            }
+            
+            // Save configuration
+            $('#saveConfig').click(function() {
+                const configName = $('#configName').val().trim();
+                if (!configName) {
+                    alert('Please enter a configuration name');
+                    return;
+                }
+                
+                const configData = {
+                    name: configName,
+                    matrixSize: parseInt($('#matrixSize').val()),
+                    numMatrices: parseInt($('#numMatrices').val()),
+                    dimensionality: parseInt($('#dimensionality').val()),
+                    cellRanges: {},
+                    constraints: []
+                };
+                
+                // Collect cell ranges
+                const size = configData.matrixSize;
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        configData.cellRanges[`${i},${j}`] = {
+                            min: parseFloat($(`.min-${i}-${j}`).val()),
+                            max: parseFloat($(`.max-${i}-${j}`).val()),
+                            step: parseFloat($(`.step-${i}-${j}`).val())
+                        };
+                    }
+                }
+                
+                // Collect constraints
+                $('.constraint').each(function() {
+                    const constraintId = $(this).attr('id').replace('constraint-', '');
+                    const selectedCells = [];
+                    $(`.matrix-cell-grid[data-constraint-id="${constraintId}"] .matrix-cell-item.selected`).each(function() {
+                        selectedCells.push($(this).data('cell'));
+                    });
+                    
+                    configData.constraints.push({
+                        cells: selectedCells,
+                        type: $(this).find('.constraint-type').val(),
+                        value: parseFloat($(this).find('.constraint-value').val())
+                    });
+                });
+                
+                // Save to localStorage
+                localStorage.setItem(`matrixConfig_${configName}`, JSON.stringify(configData));
+                alert(`Configuration "${configName}" saved successfully!`);
+            });
+            
+            // Load configuration
+            $('#loadConfig').click(function() {
+                $('#configFile').click();
+            });
+            
+            $('#configFile').change(function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const configData = JSON.parse(e.target.result);
+                        loadConfiguration(configData);
+                    } catch (error) {
+                        alert('Error loading configuration: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // Function to load configuration
+            function loadConfiguration(configData) {
+                // Set form values
+                $('#matrixSize').val(configData.matrixSize);
+                $('#numMatrices').val(configData.numMatrices);
+                $('#dimensionality').val(configData.dimensionality);
+                
+                // Generate matrix form
+                $('#generateMatrixForm').click();
+                
+                // Wait for form to be generated, then populate values
+                setTimeout(function() {
+                    // Populate cell ranges
+                    for (const [cell, range] of Object.entries(configData.cellRanges)) {
+                        const [i, j] = cell.split(',').map(Number);
+                        $(`.min-${i}-${j}`).val(range.min);
+                        $(`.max-${i}-${j}`).val(range.max);
+                        $(`.step-${i}-${j}`).val(range.step);
+                    }
+                    
+                    // Remove existing constraints and add new ones
+                    $('#constraintsContainer').empty();
+                    
+                    configData.constraints.forEach(function(constraint, index) {
+                        // Add constraint
+                        $('#addConstraint').click();
+                        
+                        // Wait for constraint to be added, then populate values
+                        setTimeout(function() {
+                            const constraintId = index;
+                            const $constraint = $(`#constraint-${constraintId}`);
+                            
+                            // Select cells in the grid
+                            constraint.cells.forEach(function(cell) {
+                                $constraint.find(`.matrix-cell-item[data-cell="${cell}"]`).addClass('selected');
+                            });
+                            
+                            // Update selected count
+                            const selectedCount = constraint.cells.length;
+                            $constraint.find('.selected-cells-info .selected-count').text(selectedCount);
+                            
+                            // Set constraint type and value
+                            $constraint.find('.constraint-type').val(constraint.type);
+                            $constraint.find('.constraint-value').val(constraint.value);
+                        }, 100);
+                    });
+                    
+                    updateStats();
+                }, 100);
+                
+                alert(`Configuration "${configData.name}" loaded successfully!`);
+            }
         });
     </script>
 </body>
