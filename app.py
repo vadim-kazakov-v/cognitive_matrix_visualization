@@ -45,6 +45,58 @@ def check_constraints(matrix, constraints):
 def index():
     return render_template('index.html')
 
+def calculate_max_matrices(size, cell_ranges):
+    """Calculate the maximum possible number of matrices based on cell ranges"""
+    total_combinations = 1
+    
+    for i in range(size):
+        for j in range(size):
+            cell_range = cell_ranges[f"{i},{j}"]
+            min_val = cell_range['min']
+            max_val = cell_range['max']
+            step = cell_range['step']
+            
+            # Calculate possible values for this cell
+            if step <= 0:
+                step = 1  # Default to 1 if step is invalid
+            values = len([x for x in np.arange(min_val, max_val + step/2, step)])
+            if values == 0:
+                # If no values in range, just use 1 possibility
+                values = 1
+            total_combinations *= values
+            
+            # Limit to prevent extremely large numbers
+            if total_combinations > 10**10:  # 10 billion max
+                return 10**6  # Return 1 million as a reasonable max
+    
+    # If total combinations is too large, return a reasonable maximum
+    if total_combinations > 10**6:
+        return 10**6
+    return total_combinations
+
+@app.route('/calculate_max_matrices', methods=['POST'])
+def calculate_max_matrices_endpoint():
+    try:
+        data = request.json
+        size = data['size']
+        cell_ranges = data['cell_ranges']
+        constraints = data.get('constraints', [])
+        
+        max_possible = calculate_max_matrices(size, cell_ranges)
+        
+        # Apply additional constraints to reduce the maximum
+        # This is a simplified calculation - in a real implementation, 
+        # we would need to account for constraint restrictions
+        # For now, we'll just return the raw maximum from cell ranges
+        # since calculating the exact maximum with constraints is complex
+        
+        return jsonify({
+            'max_possible': max_possible
+        })
+    except Exception as e:
+        logger.error(f"Error in calculate_max_matrices: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/generate', methods=['POST'])
 def generate_matrices():
     try:
@@ -55,6 +107,13 @@ def generate_matrices():
         cell_ranges = data['cell_ranges']
         constraints = data['constraints']
         eigenvector_selection = data.get('eigenvector_selection', 'all')  # Default to 'all'
+        
+        # Validate that num_matrices doesn't exceed maximum possible
+        max_possible = calculate_max_matrices(size, cell_ranges)
+        if num_matrices > max_possible:
+            error_msg = f'Requested {num_matrices} matrices but maximum possible with current ranges is {max_possible}. Please reduce the number of matrices or expand cell ranges.'
+            logger.warning(error_msg)
+            return jsonify({'error': error_msg}), 400
         
         logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints, eigenvector selection: {eigenvector_selection}")
         
