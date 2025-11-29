@@ -577,6 +577,7 @@
                 <div class="form-group">
                     <label for="numMatrices"><i class="fas fa-calculator"></i> Number of Matrices to Generate</label>
                     <input type="number" id="numMatrices" min="1" max="1000" value="100">
+                    <div id="max-possible-info" style="margin-top: 5px; font-size: 0.9em; color: var(--text-secondary);">Max possible: Calculating...</div>
                 </div>
                 <div class="form-group">
                     <label for="dimensionality"><i class="fas fa-chart-line"></i> Dimensionality for Visualization</label>
@@ -676,6 +677,69 @@
         let globalEigenvectors = [];
         
         $(document).ready(function() {
+            // Calculate maximum possible matrices based on cell ranges
+            function calculateMaxMatrices() {
+                const size = parseInt($('#matrixSize').val()) || 0;
+                
+                // Check if matrix form is generated
+                if ($('.matrix-input-table').length === 0) {
+                    return 1000; // Default max if no form yet
+                }
+                
+                // Collect matrix cell ranges
+                const cellRanges = {};
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        const min = parseFloat($(`.min-${i}-${j}`).val());
+                        const max = parseFloat($(`.max-${i}-${j}`).val());
+                        const step = parseFloat($(`.step-${i}-${j}`).val());
+                        
+                        if (!isNaN(min) && !isNaN(max) && !isNaN(step)) {
+                            cellRanges[`${i},${j}`] = {
+                                min: min,
+                                max: max,
+                                step: step
+                            };
+                        }
+                    }
+                }
+                
+                // Make an AJAX request to the backend to calculate max possible matrices
+                $.ajax({
+                    url: '/calculate_max_matrices',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        size: size,
+                        cell_ranges: cellRanges
+                    }),
+                    success: function(response) {
+                        const maxPossible = response.max_possible;
+                        const currentNumMatrices = parseInt($('#numMatrices').val());
+                        
+                        // Update the max attribute of the input field
+                        $('#numMatrices').attr('max', maxPossible);
+                        
+                        // Show the max possible value to the user
+                        $('#max-possible-info').text(`Max possible: ${maxPossible.toLocaleString()}`);
+                        
+                        // If current value exceeds max, adjust it
+                        if (currentNumMatrices > maxPossible) {
+                            $('#numMatrices').val(maxPossible);
+                        }
+                        
+                        // Update the stats display
+                        updateStats();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error calculating max matrices:', error);
+                        // Set a reasonable default if calculation fails
+                        $('#numMatrices').attr('max', 1000);
+                        $('#max-possible-info').text('Max possible: Calculating...');
+                    }
+                });
+            }
+            
             // Update stats when form changes
             function updateStats() {
                 const size = parseInt($('#matrixSize').val()) || 0;
@@ -688,7 +752,30 @@
             }
             
             // Listen for changes to update stats
-            $('#matrixSize, #numMatrices').on('input', updateStats);
+            $('#matrixSize, #numMatrices').on('input', function() {
+                updateStats();
+                
+                // If the number of matrices is changed, validate against max
+                if ($(this).attr('id') === 'numMatrices') {
+                    const maxAllowed = parseInt($('#numMatrices').attr('max')) || 1000;
+                    const currentValue = parseInt($('#numMatrices').val());
+                    
+                    if (currentValue > maxAllowed) {
+                        $('#numMatrices').val(maxAllowed);
+                        updateStats();
+                    }
+                }
+            });
+            
+            // Also listen for changes to matrix cell ranges to recalculate max
+            $(document).on('input', '.matrix-input-table input', function() {
+                // Debounce the calculation to avoid too many requests
+                clearTimeout(window.matrixCalcTimeout);
+                window.matrixCalcTimeout = setTimeout(function() {
+                    calculateMaxMatrices();
+                }, 500); // Wait 500ms after user stops typing
+            });
+            
             updateStats();
             
             // Generate matrix form based on size
@@ -737,6 +824,9 @@
                 
                 // Update stats after generating matrix form
                 updateStats();
+                
+                // Calculate maximum possible matrices based on the new form
+                calculateMaxMatrices();
             });
             
             // Add constraint
@@ -804,6 +894,9 @@
                 
                 // Update stats after adding constraint
                 updateStats();
+                
+                // Calculate maximum possible matrices based on the new form
+                calculateMaxMatrices();
             });
             
             // Remove constraint
@@ -813,6 +906,9 @@
                 
                 // Update stats after removing constraint
                 updateStats();
+                
+                // Calculate maximum possible matrices based on the new form
+                calculateMaxMatrices();
             });
             
             // Generate and visualize
@@ -1306,6 +1402,9 @@
                     });
                     
                     updateStats();
+                
+                // Calculate maximum possible matrices based on the new form
+                calculateMaxMatrices();
                 }, 100);
                 
                 alert(`Configuration "${configData.name}" loaded successfully!`);
