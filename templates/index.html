@@ -235,6 +235,16 @@
             border: 1px solid var(--border-color);
         }
         
+        .matrix-cell-grid-table {
+            border-collapse: collapse;
+            margin: 10px auto;
+        }
+        
+        .matrix-cell-grid-table td {
+            padding: 2px;
+            border: 1px solid var(--border-color);
+        }
+        
         .matrix-cell-item {
             width: 35px;
             height: 35px;
@@ -247,7 +257,6 @@
             cursor: pointer;
             font-size: 0.8rem;
             transition: all 0.2s ease;
-            margin: 1px;
         }
         
         .matrix-cell-item.selected {
@@ -722,13 +731,15 @@
                     }
                 }
                 
-                let matrixGridHtml = '<div class="matrix-cell-grid" data-constraint-id="${constraintCount}">';
+                let matrixGridHtml = '<div class="matrix-cell-grid" data-constraint-id="${constraintCount}"><table class="matrix-cell-grid-table">';
                 for (let i = 0; i < size; i++) {
+                    matrixGridHtml += '<tr>';
                     for (let j = 0; j < size; j++) {
-                        matrixGridHtml += `<div class="matrix-cell-item" data-cell="${i},${j}">[${i}][${j}]</div>`;
+                        matrixGridHtml += `<td><div class="matrix-cell-item" data-cell="${i},${j}">[${i}][${j}]</div></td>`;
                     }
+                    matrixGridHtml += '</tr>';
                 }
-                matrixGridHtml += '</div>';
+                matrixGridHtml += '</table></div>';
                 
                 const constraintHtml = `
                     <div class="constraint" id="constraint-${constraintCount}">
