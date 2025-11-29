@@ -379,6 +379,13 @@
             font-size: 0.8rem;
         }
         
+        .matrix-display-cell.constraint-cell {
+            background-color: #5e9bff;
+            border-color: #7abeff;
+            color: white;
+            font-weight: bold;
+        }
+        
         .config-controls {
             display: flex;
             gap: 10px;
@@ -1056,10 +1063,27 @@
                 
                 // Create grid for matrix
                 matrixDisplayHTML += '<div class="matrix-display">';
+                
+                // Get constraint cells to highlight
+                const constraintCells = new Set();
+                $('.constraint').each(function() {
+                    const constraintId = $(this).attr('id').replace('constraint-', '');
+                    $(`.matrix-cell-grid[data-constraint-id="${constraintId}"] .matrix-cell-item.selected`).each(function() {
+                        constraintCells.add($(this).data('cell'));
+                    });
+                });
+                
                 for (let i = 0; i < matrix.length; i++) {
                     matrixDisplayHTML += '<div class="matrix-display-row">';
                     for (let j = 0; j < matrix[i].length; j++) {
                         let cellValue = matrix[i][j];
+                        let cellClass = "matrix-display-cell";
+                        
+                        // Check if this cell is part of any constraint
+                        if (constraintCells.has(`${i},${j}`)) {
+                            cellClass += " constraint-cell";
+                        }
+                        
                         if (typeof cellValue === 'object' && cellValue !== null && 'real' in cellValue && 'imag' in cellValue) {
                             // Complex number object
                             if (cellValue.imag === 0) {
@@ -1074,7 +1098,7 @@
                         } else {
                             cellValue = String(cellValue);
                         }
-                        matrixDisplayHTML += `<div class="matrix-display-cell">${cellValue}</div>`;
+                        matrixDisplayHTML += `<div class="${cellClass}">${cellValue}</div>`;
                     }
                     matrixDisplayHTML += '</div>';
                 }
