@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matrix Eigenvalue Visualizer</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔢</text></svg>">
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -224,19 +223,16 @@
         }
         
         .matrix-cell-grid {
-            display: inline-block;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 5px;
             margin-top: 15px;
-            border: 1px solid var(--border-color);
-            border-collapse: collapse;
-        }
-        
-        .matrix-cell-grid tr, .matrix-cell-grid td {
-            border: 1px solid var(--border-color);
+            max-width: 400px;
         }
         
         .matrix-cell-item {
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -246,7 +242,6 @@
             cursor: pointer;
             font-size: 0.8rem;
             transition: all 0.2s ease;
-            margin: 1px;
         }
         
         .matrix-cell-item.selected {
@@ -381,26 +376,6 @@
             background-color: var(--bg-tertiary);
             border-radius: 8px;
             border: 1px solid var(--border-color);
-        }
-        
-        .eigenvector-controls {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: var(--bg-secondary);
-            border-radius: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .eigenvector-controls label {
-            font-weight: 500;
-            color: var(--accent-primary);
-        }
-        
-        .eigenvector-controls select {
-            min-width: 150px;
         }
         
         .eigenvector-grid {
@@ -571,16 +546,6 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="eigenvectorSelection"><i class="fas fa-vector-square"></i> Eigenvector Visualization</label>
-                    <select id="eigenvectorSelection">
-                        <option value="none">No Eigenvectors</option>
-                        <option value="all" selected>All Eigenvectors</option>
-                        <option value="dominant">Dominant Eigenvector Only</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
                     <button id="generate" class="generate-btn">
                         <i class="fas fa-play-circle"></i> Generate and Visualize
                     </button>
@@ -666,39 +631,30 @@
                 }
                 
                 let html = '<div class="form-section"><h2><i class="fas fa-table"></i> Matrix Cell Ranges</h2>';
-                html += '<div class="matrix-input-table-container">';
-                html += '<table class="matrix-input-table">';
+                html += '<div class="matrix-input-grid">';
                 
-                // Add header row with column indices
-                html += '<thead><tr><th></th>';
-                for (let j = 0; j < size; j++) {
-                    html += `<th>Col ${j}</th>`;
-                }
-                html += '</tr></thead>';
-                
-                html += '<tbody>';
                 for (let i = 0; i < size; i++) {
-                    html += `<tr>`;
-                    html += `<th>Row ${i}</th>`;
                     for (let j = 0; j < size; j++) {
-                        html += `<td class="matrix-cell-input">
-                            <div class="form-group">
-                                <label>Min</label>
-                                <input type="number" class="min-${i}-${j}" step="0.01" value="0">
+                        html += `
+                            <div class="matrix-input-cell">
+                                <h4>Cell [${i}][${j}]</h4>
+                                <div class="form-group">
+                                    <label>Min</label>
+                                    <input type="number" class="min-${i}-${j}" step="0.01" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max</label>
+                                    <input type="number" class="max-${i}-${j}" step="0.01" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Step</label>
+                                    <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Max</label>
-                                <input type="number" class="max-${i}-${j}" step="0.01" value="1">
-                            </div>
-                            <div class="form-group">
-                                <label>Step</label>
-                                <input type="number" class="step-${i}-${j}" step="0.01" value="0.1" min="0.001">
-                            </div>
-                        </td>`;
+                        `;
                     }
-                    html += '</tr>';
                 }
-                html += '</tbody></table></div></div>';
+                html += '</div></div>';
                 $('#matrixFormContainer').html(html);
                 
                 // Update stats after generating matrix form
@@ -819,8 +775,7 @@
                     num_matrices: numMatrices,
                     dimensionality: dimensionality,
                     cell_ranges: cellRanges,
-                    constraints: constraints,
-                    eigenvector_selection: $('#eigenvectorSelection').val()
+                    constraints: constraints
                 };
                 
                 // Show loading state
@@ -847,22 +802,7 @@
                                 y: coords.map(c => c[1]),
                                 mode: 'markers',
                                 type: 'scatter',
-                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => {
-                                    if (typeof v === 'object' && v !== null && 'real' in v && 'imag' in v) {
-                                        // Complex number object
-                                        if (v.imag === 0) {
-                                            return v.real.toFixed(3);
-                                        } else if (v.real === 0) {
-                                            return v.imag.toFixed(3) + 'i';
-                                        } else {
-                                            return v.imag >= 0 ? `${v.real.toFixed(3)} + ${v.imag.toFixed(3)}i` : `${v.real.toFixed(3)} - ${Math.abs(v.imag).toFixed(3)}i`;
-                                        }
-                                    } else if (typeof v === 'number') {
-                                        return v.toFixed(3);
-                                    } else {
-                                        return String(v);
-                                    }
-                                }).join(', ')}`),
+                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
                                 marker: {
                                     size: 10,
                                     color: coords.map(c => c[0]),
@@ -912,22 +852,7 @@
                                 z: coords.map(c => c[2]),
                                 mode: 'markers',
                                 type: 'scatter3d',
-                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => {
-                                    if (typeof v === 'object' && v !== null && 'real' in v && 'imag' in v) {
-                                        // Complex number object
-                                        if (v.imag === 0) {
-                                            return v.real.toFixed(3);
-                                        } else if (v.real === 0) {
-                                            return v.imag.toFixed(3) + 'i';
-                                        } else {
-                                            return v.imag >= 0 ? `${v.real.toFixed(3)} + ${v.imag.toFixed(3)}i` : `${v.real.toFixed(3)} - ${Math.abs(v.imag).toFixed(3)}i`;
-                                        }
-                                    } else if (typeof v === 'number') {
-                                        return v.toFixed(3);
-                                    } else {
-                                        return String(v);
-                                    }
-                                }).join(', ')}`),
+                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => v.toFixed(3)).join(', ')}`),
                                 marker: {
                                     size: 6,
                                     color: coords.map(c => c[0]),
@@ -1003,17 +928,12 @@
                         // Complex number object
                         if (val.imag === 0) {
                             return val.real.toFixed(3);
-                        } else if (val.real === 0) {
-                            return val.imag.toFixed(3) + 'i';
                         } else {
-                            return val.imag >= 0 ? `${val.real.toFixed(3)} + ${val.imag.toFixed(3)}i` : `${val.real.toFixed(3)} - ${Math.abs(val.imag).toFixed(3)}i`;
+                            return `${val.real.toFixed(3)} + ${val.imag.toFixed(3)}i`;
                         }
-                    } else if (typeof val === 'number') {
+                    } else {
                         // Regular number
                         return val.toFixed(3);
-                    } else {
-                        // Fallback for non-numeric values
-                        return String(val);
                     }
                 });
                 
@@ -1024,22 +944,7 @@
                 for (let i = 0; i < matrix.length; i++) {
                     matrixDisplayHTML += '<div class="matrix-display-row">';
                     for (let j = 0; j < matrix[i].length; j++) {
-                        let cellValue = matrix[i][j];
-                        if (typeof cellValue === 'object' && cellValue !== null && 'real' in cellValue && 'imag' in cellValue) {
-                            // Complex number object
-                            if (cellValue.imag === 0) {
-                                cellValue = cellValue.real.toFixed(3);
-                            } else if (cellValue.real === 0) {
-                                cellValue = cellValue.imag.toFixed(3) + 'i';
-                            } else {
-                                cellValue = cellValue.imag >= 0 ? `${cellValue.real.toFixed(3)} + ${cellValue.imag.toFixed(3)}i` : `${cellValue.real.toFixed(3)} - ${Math.abs(cellValue.imag).toFixed(3)}i`;
-                            }
-                        } else if (typeof cellValue === 'number') {
-                            cellValue = cellValue.toFixed(3);
-                        } else {
-                            cellValue = String(cellValue);
-                        }
-                        matrixDisplayHTML += `<div class="matrix-display-cell">${cellValue}</div>`;
+                        matrixDisplayHTML += `<div class="matrix-display-cell">${matrix[i][j].toFixed(3)}</div>`;
                     }
                     matrixDisplayHTML += '</div>';
                 }
@@ -1063,17 +968,12 @@
                                 // Complex number object
                                 if (component.imag === 0) {
                                     formattedComponent = component.real.toFixed(3);
-                                } else if (component.real === 0) {
-                                    formattedComponent = component.imag.toFixed(3) + 'i';
                                 } else {
-                                    formattedComponent = component.imag >= 0 ? `${component.real.toFixed(3)} + ${component.imag.toFixed(3)}i` : `${component.real.toFixed(3)} - ${Math.abs(component.imag).toFixed(3)}i`;
+                                    formattedComponent = `${component.real.toFixed(3)} + ${component.imag.toFixed(3)}i`;
                                 }
-                            } else if (typeof component === 'number') {
+                            } else {
                                 // Regular number
                                 formattedComponent = component.toFixed(3);
-                            } else {
-                                // Fallback for non-numeric values
-                                formattedComponent = String(component);
                             }
                             matrixDisplayHTML += `<p>Component ${j}: ${formattedComponent}</p>`;
                         }
