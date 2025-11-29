@@ -600,6 +600,17 @@
         
         <div id="plot"></div>
         
+        <div class="form-section">
+            <h2><i class="fas fa-download"></i> Export Results</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <button id="saveResults">
+                        <i class="fas fa-file-export"></i> Save Generated Matrices
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-label">Matrices Generated</div>
@@ -651,6 +662,12 @@
     </div>
 
     <script>
+        // Global variables to store generated results
+        let globalCoords = [];
+        let globalEigenvalues = [];
+        let globalMatrices = [];
+        let globalEigenvectors = [];
+        
         $(document).ready(function() {
             // Update stats when form changes
             function updateStats() {
@@ -851,6 +868,12 @@
                         const eigenvalues = response.eigenvalues;
                         const matrices = response.matrices; // Get the original matrices
                         const eigenvectors = response.eigenvectors; // Get the eigenvectors
+                        
+                        // Store the results in global variables for saving
+                        globalCoords = coords;
+                        globalEigenvalues = eigenvalues;
+                        globalMatrices = matrices;
+                        globalEigenvectors = eigenvectors;
                         
                         // Prepare data for Plotly
                         if (dimensionality === 2) {
@@ -1116,7 +1139,8 @@
                     numMatrices: parseInt($('#numMatrices').val()),
                     dimensionality: parseInt($('#dimensionality').val()),
                     cellRanges: {},
-                    constraints: []
+                    constraints: [],
+                    timestamp: new Date().toISOString()
                 };
                 
                 // Collect cell ranges
@@ -1148,7 +1172,45 @@
                 
                 // Save to localStorage
                 localStorage.setItem(`matrixConfig_${configName}`, JSON.stringify(configData));
-                alert(`Configuration "${configName}" saved successfully!`);
+                
+                // Create and download file
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", configName + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                
+                alert(`Configuration "${configName}" saved and downloaded successfully!`);
+            });
+            
+            // Save results
+            $('#saveResults').click(function() {
+                if (globalMatrices.length === 0) {
+                    alert('No results to save. Please generate matrices first.');
+                    return;
+                }
+                
+                const resultsData = {
+                    timestamp: new Date().toISOString(),
+                    coordinates: globalCoords,
+                    eigenvalues: globalEigenvalues,
+                    matrices: globalMatrices,
+                    eigenvectors: globalEigenvectors,
+                    matrixCount: globalMatrices.length,
+                    matrixSize: globalMatrices[0] ? globalMatrices[0].length : 0
+                };
+                
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultsData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "matrix_results_" + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                
+                alert(`Generated matrices and results saved successfully!`);
             });
             
             // Load configuration
