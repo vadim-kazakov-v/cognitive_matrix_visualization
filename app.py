@@ -54,8 +54,9 @@ def generate_matrices():
         dimensionality = data['dimensionality']
         cell_ranges = data['cell_ranges']
         constraints = data['constraints']
+        eigenvector_selection = data.get('eigenvector_selection', 'all')  # Default to 'all'
         
-        logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints")
+        logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints, eigenvector selection: {eigenvector_selection}")
         
         # Generate matrices based on cell ranges and constraints
         valid_matrices = []
