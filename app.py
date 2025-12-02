@@ -111,6 +111,7 @@ def generate_matrices():
         algorithm = data.get('algorithm', 'tsne')  # Default to 'tsne'
         input_type = data.get('input_type', 'eigenvalues')  # Default to 'eigenvalues'
         use_imaginary = data.get('use_imaginary', False)  # Default to False
+        transpose_matrix = data.get('transpose_matrix', False)  # Default to False
         
         # Validate that num_matrices doesn't exceed maximum possible
         max_possible = calculate_max_matrices(size, cell_ranges)
@@ -149,11 +150,15 @@ def generate_matrices():
                     else:
                         matrix[i][j] = random.choice(values)
             
-            # Check if matrix satisfies all constraints
+            # Check if matrix satisfies all constraints (on original matrix before transposition)
             if check_constraints(matrix, constraints):
-                valid_matrices.append(matrix.copy())  # Store a copy of the matrix
+                # Transpose the matrix if requested
+                if transpose_matrix:
+                    matrix = matrix.T  # Transpose the matrix for analysis
                 
-                # Calculate eigenvalues and eigenvectors
+                valid_matrices.append(matrix.copy())  # Store a copy of the (possibly transposed) matrix
+                
+                # Calculate eigenvalues and eigenvectors using the (possibly transposed) matrix
                 eigenvalues = eigvals(matrix)
                 # Extract real parts of eigenvalues and handle complex numbers
                 processed_eigenvalues = []
@@ -167,7 +172,7 @@ def generate_matrices():
                         processed_eigenvalues.append(float(ev))
                 eigenvalues_list.append(processed_eigenvalues)
                 
-                # Calculate eigenvectors
+                # Calculate eigenvectors using the (possibly transposed) matrix
                 eigenvals, eigenvecs = np.linalg.eig(matrix)
                 # Convert eigenvectors to lists for JSON serialization and handle complex numbers
                 processed_eigenvectors = []
