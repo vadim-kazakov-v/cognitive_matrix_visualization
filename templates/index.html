@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrix Eigenvalue Visualizer</title>
+    <title>Radiation Protection Shield Analyzer</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
@@ -534,17 +534,18 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-project-diagram"></i> Matrix Eigenvalue Visualizer</h1>
-            <p class="subtitle">Advanced matrix analysis with constraint-based generation and visualization</p>
+            <h1><i class="fas fa-shield-alt"></i> Radiation Protection Shield Analyzer</h1>
+            <p class="subtitle">Analyze radiation shielding effectiveness of multi-layer materials</p>
         </header>
         
         <div class="instructions">
             <h3><i class="fas fa-info-circle"></i> How to use this tool</h3>
             <ul>
-                <li>Set your matrix size and click "Generate Matrix Form" to configure cell ranges</li>
+                <li>Set your matrix size where columns = layers and rows = properties (first row = thickness, subsequent rows = chemical element percentages)</li>
+                <li>Use presets for common radiation protection materials or configure manually</li>
                 <li>Define constraints to limit the possible values of your matrices</li>
                 <li>Specify generation parameters and click "Generate and Visualize"</li>
-                <li>Use the interactive plot to explore eigenvalue relationships</li>
+                <li>Use the interactive plot to explore radiation shielding effectiveness</li>
             </ul>
         </div>
         
@@ -559,6 +560,29 @@
                     <label>&nbsp;</label> <!-- Maintain label spacing -->
                     <button id="generateMatrixForm">
                         <i class="fas fa-cogs"></i> Generate Matrix Form
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Preset Buttons for Radiation Protection Application -->
+            <div class="form-section">
+                <h2><i class="fas fa-rocket"></i> Radiation Protection Presets</h2>
+                <p>For radiation protection applications, columns represent layers and rows represent: first row = thickness, subsequent rows = percentage of chemical elements</p>
+                <div class="form-row">
+                    <button id="presetAluminum" class="secondary preset-btn">
+                        <i class="fas fa-shield-alt"></i> Aluminum Shield
+                    </button>
+                    <button id="presetLeadConcrete" class="secondary preset-btn">
+                        <i class="fas fa-shield-alt"></i> Lead-Concrete Shield
+                    </button>
+                    <button id="presetMultiLayer" class="secondary preset-btn">
+                        <i class="fas fa-shield-alt"></i> Multi-Layer Shield
+                    </button>
+                    <button id="presetSpacecraft" class="secondary preset-btn">
+                        <i class="fas fa-shield-alt"></i> Spacecraft Shield
+                    </button>
+                    <button id="presetReactor" class="secondary preset-btn">
+                        <i class="fas fa-shield-alt"></i> Reactor Shield
                     </button>
                 </div>
             </div>
@@ -866,6 +890,211 @@
                 
                 // Calculate maximum possible matrices based on the new form
                 calculateMaxMatrices();
+            });
+            
+            // Preset functions for radiation protection
+            function applyPreset(presetType) {
+                const size = parseInt($('#matrixSize').val());
+                if (size < 2) {
+                    alert('Please set matrix size to at least 2x2 before applying presets');
+                    return;
+                }
+                
+                // First ensure the matrix form is generated
+                if ($('.matrix-input-table').length === 0) {
+                    $('#generateMatrixForm').click();
+                    
+                    // Wait for form to be generated, then apply preset
+                    setTimeout(() => {
+                        applyPresetValues(presetType, size);
+                    }, 100);
+                } else {
+                    applyPresetValues(presetType, size);
+                }
+            }
+            
+            function applyPresetValues(presetType, size) {
+                switch(presetType) {
+                    case 'aluminum':
+                        // Aluminum shield: 1st row = thickness (1-10 cm), 2nd row = Al percentage (95-100%)
+                        for (let j = 0; j < size; j++) {
+                            $(`.min-0-${j}`).val(1);    // thickness min
+                            $(`.max-0-${j}`).val(10);   // thickness max
+                            $(`.step-0-${j}`).val(0.5);
+                            
+                            $(`.min-1-${j}`).val(95);   // aluminum percentage min
+                            $(`.max-1-${j}`).val(100);  // aluminum percentage max
+                            $(`.step-1-${j}`).val(1);
+                        }
+                        // Clear other rows if they exist
+                        for (let i = 2; i < size; i++) {
+                            for (let j = 0; j < size; j++) {
+                                $(`.min-${i}-${j}`).val(0);
+                                $(`.max-${i}-${j}`).val(0);
+                                $(`.step-${i}-${j}`).val(1);
+                            }
+                        }
+                        break;
+                        
+                    case 'leadconcrete':
+                        // Lead-concrete shield: 1st row = thickness (5-50 cm), 2nd row = lead percentage (10-30%), 3rd row = concrete percentage (70-90%)
+                        for (let j = 0; j < size; j++) {
+                            $(`.min-0-${j}`).val(5);    // thickness min
+                            $(`.max-0-${j}`).val(50);   // thickness max
+                            $(`.step-0-${j}`).val(1);
+                            
+                            if (size > 1) {
+                                $(`.min-1-${j}`).val(10);   // lead percentage min
+                                $(`.max-1-${j}`).val(30);   // lead percentage max
+                                $(`.step-1-${j}`).val(1);
+                            }
+                            
+                            if (size > 2) {
+                                $(`.min-2-${j}`).val(70);   // concrete percentage min
+                                $(`.max-2-${j}`).val(90);   // concrete percentage max
+                                $(`.step-2-${j}`).val(1);
+                            }
+                        }
+                        // Clear other rows if they exist
+                        for (let i = 3; i < size; i++) {
+                            for (let j = 0; j < size; j++) {
+                                $(`.min-${i}-${j}`).val(0);
+                                $(`.max-${i}-${j}`).val(0);
+                                $(`.step-${i}-${j}`).val(1);
+                            }
+                        }
+                        break;
+                        
+                    case 'multilayer':
+                        // Multi-layer shield: 1st row = thickness (2-20 cm), 2nd row = material1 (20-50%), 3rd row = material2 (20-50%), 4th row = material3 (10-30%)
+                        for (let j = 0; j < size; j++) {
+                            $(`.min-0-${j}`).val(2);    // thickness min
+                            $(`.max-0-${j}`).val(20);   // thickness max
+                            $(`.step-0-${j}`).val(0.5);
+                            
+                            if (size > 1) {
+                                $(`.min-1-${j}`).val(20);   // material1 percentage min
+                                $(`.max-1-${j}`).val(50);   // material1 percentage max
+                                $(`.step-1-${j}`).val(1);
+                            }
+                            
+                            if (size > 2) {
+                                $(`.min-2-${j}`).val(20);   // material2 percentage min
+                                $(`.max-2-${j}`).val(50);   // material2 percentage max
+                                $(`.step-2-${j}`).val(1);
+                            }
+                            
+                            if (size > 3) {
+                                $(`.min-3-${j}`).val(10);   // material3 percentage min
+                                $(`.max-3-${j}`).val(30);   // material3 percentage max
+                                $(`.step-3-${j}`).val(1);
+                            }
+                        }
+                        // Clear other rows if they exist
+                        for (let i = 4; i < size; i++) {
+                            for (let j = 0; j < size; j++) {
+                                $(`.min-${i}-${j}`).val(0);
+                                $(`.max-${i}-${j}`).val(0);
+                                $(`.step-${i}-${j}`).val(1);
+                            }
+                        }
+                        break;
+                        
+                    case 'spacecraft':
+                        // Spacecraft shield: 1st row = thickness (0.1-5 cm), 2nd row = Al percentage (40-80%), 3rd row = Li percentage (5-15%), 4th row = H percentage (10-20%)
+                        for (let j = 0; j < size; j++) {
+                            $(`.min-0-${j}`).val(0.1);  // thickness min
+                            $(`.max-0-${j}`).val(5);    // thickness max
+                            $(`.step-0-${j}`).val(0.1);
+                            
+                            if (size > 1) {
+                                $(`.min-1-${j}`).val(40);   // aluminum percentage min
+                                $(`.max-1-${j}`).val(80);   // aluminum percentage max
+                                $(`.step-1-${j}`).val(1);
+                            }
+                            
+                            if (size > 2) {
+                                $(`.min-2-${j}`).val(5);    // lithium percentage min
+                                $(`.max-2-${j}`).val(15);   // lithium percentage max
+                                $(`.step-2-${j}`).val(0.5);
+                            }
+                            
+                            if (size > 3) {
+                                $(`.min-3-${j}`).val(10);   // hydrogen percentage min
+                                $(`.max-3-${j}`).val(20);   // hydrogen percentage max
+                                $(`.step-3-${j}`).val(1);
+                            }
+                        }
+                        // Clear other rows if they exist
+                        for (let i = 4; i < size; i++) {
+                            for (let j = 0; j < size; j++) {
+                                $(`.min-${i}-${j}`).val(0);
+                                $(`.max-${i}-${j}`).val(0);
+                                $(`.step-${i}-${j}`).val(1);
+                            }
+                        }
+                        break;
+                        
+                    case 'reactor':
+                        // Reactor shield: 1st row = thickness (10-100 cm), 2nd row = B percentage (5-15%), 3rd row = concrete percentage (80-90%), 4th row = steel percentage (5-10%)
+                        for (let j = 0; j < size; j++) {
+                            $(`.min-0-${j}`).val(10);   // thickness min
+                            $(`.max-0-${j}`).val(100);  // thickness max
+                            $(`.step-0-${j}`).val(5);
+                            
+                            if (size > 1) {
+                                $(`.min-1-${j}`).val(5);    // boron percentage min
+                                $(`.max-1-${j}`).val(15);   // boron percentage max
+                                $(`.step-1-${j}`).val(0.5);
+                            }
+                            
+                            if (size > 2) {
+                                $(`.min-2-${j}`).val(80);   // concrete percentage min
+                                $(`.max-2-${j}`).val(90);   // concrete percentage max
+                                $(`.step-2-${j}`).val(1);
+                            }
+                            
+                            if (size > 3) {
+                                $(`.min-3-${j}`).val(5);    // steel percentage min
+                                $(`.max-3-${j}`).val(10);   // steel percentage max
+                                $(`.step-3-${j}`).val(0.5);
+                            }
+                        }
+                        // Clear other rows if they exist
+                        for (let i = 4; i < size; i++) {
+                            for (let j = 0; j < size; j++) {
+                                $(`.min-${i}-${j}`).val(0);
+                                $(`.max-${i}-${j}`).val(0);
+                                $(`.step-${i}-${j}`).val(1);
+                            }
+                        }
+                        break;
+                }
+                
+                // Recalculate max matrices after applying preset
+                calculateMaxMatrices();
+                updateStats();
+            }
+            
+            // Event listeners for preset buttons
+            $('#presetAluminum').click(function() {
+                applyPreset('aluminum');
+            });
+            
+            $('#presetLeadConcrete').click(function() {
+                applyPreset('leadconcrete');
+            });
+            
+            $('#presetMultiLayer').click(function() {
+                applyPreset('multilayer');
+            });
+            
+            $('#presetSpacecraft').click(function() {
+                applyPreset('spacecraft');
+            });
+            
+            $('#presetReactor').click(function() {
+                applyPreset('reactor');
             });
             
             // Add constraint
