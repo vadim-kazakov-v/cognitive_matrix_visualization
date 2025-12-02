@@ -2,7 +2,12 @@ from flask import Flask, render_template, request, jsonify
 import numpy as np
 from scipy.linalg import eigvals
 from sklearn.manifold import TSNE
-import umap
+try:
+    import umap
+    UMAP_AVAILABLE = True
+except ImportError:
+    umap = None
+    UMAP_AVAILABLE = False
 import random
 import itertools
 import json
