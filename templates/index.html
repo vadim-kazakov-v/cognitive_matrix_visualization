@@ -1223,7 +1223,8 @@
                     eigenvector_selection: $('#eigenvectorSelection').val(),
                     algorithm: $('#algorithm').val(),
                     input_type: $('#inputType').val(),
-                    use_imaginary: $('#useImaginary').is(':checked')
+                    use_imaginary: $('#useImaginary').is(':checked'),
+                    transpose_matrix: $('#transposeMatrix').is(':checked')
                 };
                 
                 // Show loading state
@@ -1642,6 +1643,7 @@
                     algorithm: $('#algorithm').val(),
                     inputType: $('#inputType').val(),
                     useImaginary: $('#useImaginary').is(':checked'),
+                    transposeMatrix: $('#transposeMatrix').is(':checked'),
                     cellRanges: {},
                     constraints: [],
                     timestamp: new Date().toISOString()
@@ -1762,6 +1764,12 @@
                     $('#useImaginary').prop('checked', configData.useImaginary);
                 } else {
                     $('#useImaginary').prop('checked', false); // default
+                }
+                
+                if (configData.transposeMatrix !== undefined) {
+                    $('#transposeMatrix').prop('checked', configData.transposeMatrix);
+                } else {
+                    $('#transposeMatrix').prop('checked', false); // default
                 }
                 
                 // Generate matrix form
