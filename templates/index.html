@@ -1012,22 +1012,77 @@
                                 y: coords.map(c => c[1]),
                                 mode: 'markers',
                                 type: 'scatter',
-                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => {
-                                    if (typeof v === 'object' && v !== null && 'real' in v && 'imag' in v) {
-                                        // Complex number object
-                                        if (v.imag === 0) {
-                                            return v.real.toFixed(3);
-                                        } else if (v.real === 0) {
-                                            return v.imag.toFixed(3) + 'i';
+                                text: eigenvalues.map((e, i) => {
+                                    // Format eigenvalues
+                                    const formattedEigenvalues = e.map(val => {
+                                        if (typeof val === 'object' && val !== null && 'real' in val && 'imag' in val) {
+                                            // Complex number object
+                                            if (val.imag === 0) {
+                                                return val.real.toFixed(3);
+                                            } else if (val.real === 0) {
+                                                return val.imag.toFixed(3) + 'i';
+                                            } else {
+                                                return val.imag >= 0 ? `${val.real.toFixed(3)} + ${val.imag.toFixed(3)}i` : `${val.real.toFixed(3)} - ${Math.abs(val.imag).toFixed(3)}i`;
+                                            }
+                                        } else if (typeof val === 'number') {
+                                            // Regular number
+                                            return val.toFixed(3);
                                         } else {
-                                            return v.imag >= 0 ? `${v.real.toFixed(3)} + ${v.imag.toFixed(3)}i` : `${v.real.toFixed(3)} - ${Math.abs(v.imag).toFixed(3)}i`;
+                                            // Fallback for non-numeric values
+                                            return String(val);
                                         }
-                                    } else if (typeof v === 'number') {
-                                        return v.toFixed(3);
-                                    } else {
-                                        return String(v);
-                                    }
-                                }).join(', ')}`),
+                                    }).join(', ');
+                                    
+                                    // Format eigenvectors
+                                    const formattedEigenvectors = eigenvectors[i].map((eigvec, idx) => {
+                                        const components = eigvec.map(comp => {
+                                            if (typeof comp === 'object' && comp !== null && 'real' in comp && 'imag' in comp) {
+                                                // Complex number object
+                                                if (comp.imag === 0) {
+                                                    return comp.real.toFixed(3);
+                                                } else if (comp.real === 0) {
+                                                    return comp.imag.toFixed(3) + 'i';
+                                                } else {
+                                                    return comp.imag >= 0 ? `${comp.real.toFixed(3)} + ${comp.imag.toFixed(3)}i` : `${comp.real.toFixed(3)} - ${Math.abs(comp.imag).toFixed(3)}i`;
+                                                }
+                                            } else if (typeof comp === 'number') {
+                                                // Regular number
+                                                return comp.toFixed(3);
+                                            } else {
+                                                // Fallback for non-numeric values
+                                                return String(comp);
+                                            }
+                                        }).join(', ');
+                                        return `v${idx + 1}: [${components}]`;
+                                    }).join('<br>');
+                                    
+                                    // Format original matrix
+                                    const formattedMatrix = matrices[i].map(row => 
+                                        row.map(cell => {
+                                            if (typeof cell === 'object' && cell !== null && 'real' in cell && 'imag' in cell) {
+                                                // Complex number object
+                                                if (cell.imag === 0) {
+                                                    return cell.real.toFixed(3);
+                                                } else if (cell.real === 0) {
+                                                    return cell.imag.toFixed(3) + 'i';
+                                                } else {
+                                                    return cell.imag >= 0 ? `${cell.real.toFixed(3)} + ${cell.imag.toFixed(3)}i` : `${cell.real.toFixed(3)} - ${Math.abs(cell.imag).toFixed(3)}i`;
+                                                }
+                                            } else if (typeof cell === 'number') {
+                                                // Regular number
+                                                return cell.toFixed(3);
+                                            } else {
+                                                // Fallback for non-numeric values
+                                                return String(cell);
+                                            }
+                                        }).join(', ')
+                                    ).join('<br>');
+                                    
+                                    return `<b>Matrix ${i}</b><br>` +
+                                           `<b>Original Matrix:</b><br>${formattedMatrix}<br>` +
+                                           `<b>EVs:</b> ${formattedEigenvalues}<br>` +
+                                           `<b>Eigenvectors:</b><br>${formattedEigenvectors}`;
+                                }),
                                 marker: {
                                     size: 10,
                                     color: coords.map(c => c[0]),
@@ -1077,22 +1132,77 @@
                                 z: coords.map(c => c[2]),
                                 mode: 'markers',
                                 type: 'scatter3d',
-                                text: eigenvalues.map((e, i) => `Matrix ${i}<br>EVs: ${e.slice(0, 3).map(v => {
-                                    if (typeof v === 'object' && v !== null && 'real' in v && 'imag' in v) {
-                                        // Complex number object
-                                        if (v.imag === 0) {
-                                            return v.real.toFixed(3);
-                                        } else if (v.real === 0) {
-                                            return v.imag.toFixed(3) + 'i';
+                                text: eigenvalues.map((e, i) => {
+                                    // Format eigenvalues
+                                    const formattedEigenvalues = e.map(val => {
+                                        if (typeof val === 'object' && val !== null && 'real' in val && 'imag' in val) {
+                                            // Complex number object
+                                            if (val.imag === 0) {
+                                                return val.real.toFixed(3);
+                                            } else if (val.real === 0) {
+                                                return val.imag.toFixed(3) + 'i';
+                                            } else {
+                                                return val.imag >= 0 ? `${val.real.toFixed(3)} + ${val.imag.toFixed(3)}i` : `${val.real.toFixed(3)} - ${Math.abs(val.imag).toFixed(3)}i`;
+                                            }
+                                        } else if (typeof val === 'number') {
+                                            // Regular number
+                                            return val.toFixed(3);
                                         } else {
-                                            return v.imag >= 0 ? `${v.real.toFixed(3)} + ${v.imag.toFixed(3)}i` : `${v.real.toFixed(3)} - ${Math.abs(v.imag).toFixed(3)}i`;
+                                            // Fallback for non-numeric values
+                                            return String(val);
                                         }
-                                    } else if (typeof v === 'number') {
-                                        return v.toFixed(3);
-                                    } else {
-                                        return String(v);
-                                    }
-                                }).join(', ')}`),
+                                    }).join(', ');
+                                    
+                                    // Format eigenvectors
+                                    const formattedEigenvectors = eigenvectors[i].map((eigvec, idx) => {
+                                        const components = eigvec.map(comp => {
+                                            if (typeof comp === 'object' && comp !== null && 'real' in comp && 'imag' in comp) {
+                                                // Complex number object
+                                                if (comp.imag === 0) {
+                                                    return comp.real.toFixed(3);
+                                                } else if (comp.real === 0) {
+                                                    return comp.imag.toFixed(3) + 'i';
+                                                } else {
+                                                    return comp.imag >= 0 ? `${comp.real.toFixed(3)} + ${comp.imag.toFixed(3)}i` : `${comp.real.toFixed(3)} - ${Math.abs(comp.imag).toFixed(3)}i`;
+                                                }
+                                            } else if (typeof comp === 'number') {
+                                                // Regular number
+                                                return comp.toFixed(3);
+                                            } else {
+                                                // Fallback for non-numeric values
+                                                return String(comp);
+                                            }
+                                        }).join(', ');
+                                        return `v${idx + 1}: [${components}]`;
+                                    }).join('<br>');
+                                    
+                                    // Format original matrix
+                                    const formattedMatrix = matrices[i].map(row => 
+                                        row.map(cell => {
+                                            if (typeof cell === 'object' && cell !== null && 'real' in cell && 'imag' in cell) {
+                                                // Complex number object
+                                                if (cell.imag === 0) {
+                                                    return cell.real.toFixed(3);
+                                                } else if (cell.real === 0) {
+                                                    return cell.imag.toFixed(3) + 'i';
+                                                } else {
+                                                    return cell.imag >= 0 ? `${cell.real.toFixed(3)} + ${cell.imag.toFixed(3)}i` : `${cell.real.toFixed(3)} - ${Math.abs(cell.imag).toFixed(3)}i`;
+                                                }
+                                            } else if (typeof cell === 'number') {
+                                                // Regular number
+                                                return cell.toFixed(3);
+                                            } else {
+                                                // Fallback for non-numeric values
+                                                return String(cell);
+                                            }
+                                        }).join(', ')
+                                    ).join('<br>');
+                                    
+                                    return `<b>Matrix ${i}</b><br>` +
+                                           `<b>Original Matrix:</b><br>${formattedMatrix}<br>` +
+                                           `<b>EVs:</b> ${formattedEigenvalues}<br>` +
+                                           `<b>Eigenvectors:</b><br>${formattedEigenvectors}`;
+                                }),
                                 marker: {
                                     size: 6,
                                     color: coords.map(c => c[0]),
