@@ -638,7 +638,7 @@
             <!-- Preset Buttons for Radiation Protection Application -->
             <div class="form-section">
                 <h2><i class="fas fa-rocket"></i> Radiation Protection Presets</h2>
-                <p>For radiation protection applications, columns represent layers and rows represent: first row = thickness, subsequent rows = percentage of chemical elements</p>
+                <p>For radiation protection applications, columns represent layers and rows represent: first row = thickness of layer 1, second row = thickness of layer 2, third row = thickness of layer 3, etc.</p>
                 <div class="form-row">
                     <button id="presetAluminum" class="secondary preset-btn">
                         <i class="fas fa-shield-alt"></i> Aluminum Shield
@@ -654,6 +654,9 @@
                     </button>
                     <button id="presetReactor" class="secondary preset-btn">
                         <i class="fas fa-shield-alt"></i> Reactor Shield
+                    </button>
+                    <button id="presetThreeLayer" class="secondary preset-btn">
+                        <i class="fas fa-layer-group"></i> 3-Layer Shield
                     </button>
                 </div>
             </div>
@@ -1002,18 +1005,23 @@
             function applyPresetValues(presetType, size) {
                 switch(presetType) {
                     case 'aluminum':
-                        // Aluminum shield: 1st row = thickness (1-10 cm), 2nd row = Al percentage (95-100%)
+                        // Aluminum shield: 1st row = thickness of outer Al layer (1-5 cm), 2nd row = thickness of middle Al layer (2-8 cm), 3rd row = thickness of inner Al layer (1-5 cm)
                         for (let j = 0; j < size; j++) {
+                            // Outer Aluminum layer (initial particle protection)
                             $(`.min-0-${j}`).val(1);    // thickness min
-                            $(`.max-0-${j}`).val(10);   // thickness max
+                            $(`.max-0-${j}`).val(5);   // thickness max
                             $(`.step-0-${j}`).val(0.5);
                             
-                            $(`.min-1-${j}`).val(95);   // aluminum percentage min
-                            $(`.max-1-${j}`).val(100);  // aluminum percentage max
-                            $(`.step-1-${j}`).val(1);
+                            $(`.min-1-${j}`).val(2);   // middle aluminum thickness min
+                            $(`.max-1-${j}`).val(8);  // middle aluminum thickness max
+                            $(`.step-1-${j}`).val(0.5);
+                            
+                            $(`.min-2-${j}`).val(1);   // inner aluminum thickness min
+                            $(`.max-2-${j}`).val(5);  // inner aluminum thickness max
+                            $(`.step-2-${j}`).val(0.5);
                         }
                         // Clear other rows if they exist
-                        for (let i = 2; i < size; i++) {
+                        for (let i = 3; i < size; i++) {
                             for (let j = 0; j < size; j++) {
                                 $(`.min-${i}-${j}`).val(0);
                                 $(`.max-${i}-${j}`).val(0);
@@ -1023,21 +1031,24 @@
                         break;
                         
                     case 'leadconcrete':
-                        // Lead-concrete shield: 1st row = thickness (5-50 cm), 2nd row = lead percentage (10-30%), 3rd row = concrete percentage (70-90%)
+                        // Lead-concrete shield: 1st row = thickness of layer 1 (Aluminum backing, 2-10 cm), 2nd row = thickness of lead layer (5-20 cm), 3rd row = thickness of concrete layer (10-50 cm)
                         for (let j = 0; j < size; j++) {
-                            $(`.min-0-${j}`).val(5);    // thickness min
-                            $(`.max-0-${j}`).val(50);   // thickness max
-                            $(`.step-0-${j}`).val(1);
+                            // Aluminum backing layer
+                            $(`.min-0-${j}`).val(2);    // thickness min
+                            $(`.max-0-${j}`).val(10);   // thickness max
+                            $(`.step-0-${j}`).val(0.5);
                             
                             if (size > 1) {
-                                $(`.min-1-${j}`).val(10);   // lead percentage min
-                                $(`.max-1-${j}`).val(30);   // lead percentage max
-                                $(`.step-1-${j}`).val(1);
+                                // Lead layer (main gamma shield)
+                                $(`.min-1-${j}`).val(5);   // lead thickness min
+                                $(`.max-1-${j}`).val(20);  // lead thickness max
+                                $(`.step-1-${j}`).val(0.5);
                             }
                             
                             if (size > 2) {
-                                $(`.min-2-${j}`).val(70);   // concrete percentage min
-                                $(`.max-2-${j}`).val(90);   // concrete percentage max
+                                // Concrete layer (neutron and secondary particle shield)
+                                $(`.min-2-${j}`).val(10);   // concrete thickness min
+                                $(`.max-2-${j}`).val(50);  // concrete thickness max
                                 $(`.step-2-${j}`).val(1);
                             }
                         }
@@ -1052,28 +1063,32 @@
                         break;
                         
                     case 'multilayer':
-                        // Multi-layer shield: 1st row = thickness (2-20 cm), 2nd row = material1 (20-50%), 3rd row = material2 (20-50%), 4th row = material3 (10-30%)
+                        // Multi-layer shield: 1st row = thickness of layer 1 (light materials), 2nd row = thickness of layer 2 (heavy materials), 3rd row = thickness of layer 3 (light materials), 4th row = additional layer if needed
                         for (let j = 0; j < size; j++) {
-                            $(`.min-0-${j}`).val(2);    // thickness min
-                            $(`.max-0-${j}`).val(20);   // thickness max
+                            // Layer 1 thickness (light materials: Al, Plastic, etc.)
+                            $(`.min-0-${j}`).val(1);    // thickness min
+                            $(`.max-0-${j}`).val(10);   // thickness max
                             $(`.step-0-${j}`).val(0.5);
                             
                             if (size > 1) {
-                                $(`.min-1-${j}`).val(20);   // material1 percentage min
-                                $(`.max-1-${j}`).val(50);   // material1 percentage max
-                                $(`.step-1-${j}`).val(1);
+                                // Layer 2 thickness (heavy materials: Pb, W, etc.)
+                                $(`.min-1-${j}`).val(2);   // thickness min (heavier materials typically need more)
+                                $(`.max-1-${j}`).val(15);  // thickness max
+                                $(`.step-1-${j}`).val(0.5);
                             }
                             
                             if (size > 2) {
-                                $(`.min-2-${j}`).val(20);   // material2 percentage min
-                                $(`.max-2-${j}`).val(50);   // material2 percentage max
-                                $(`.step-2-${j}`).val(1);
+                                // Layer 3 thickness (light materials: Al, Plastic, etc.)
+                                $(`.min-2-${j}`).val(1);   // thickness min
+                                $(`.max-2-${j}`).val(10);  // thickness max
+                                $(`.step-2-${j}`).val(0.5);
                             }
                             
                             if (size > 3) {
-                                $(`.min-3-${j}`).val(10);   // material3 percentage min
-                                $(`.max-3-${j}`).val(30);   // material3 percentage max
-                                $(`.step-3-${j}`).val(1);
+                                // Additional layer if needed
+                                $(`.min-3-${j}`).val(0.5);   // thickness min
+                                $(`.max-3-${j}`).val(5);   // thickness max
+                                $(`.step-3-${j}`).val(0.5);
                             }
                         }
                         // Clear other rows if they exist
@@ -1086,33 +1101,124 @@
                         }
                         break;
                         
+                    case 'threeLayerShield':
+                        // 3-layer shield: 1st row = thickness of layer 1 (light materials, e.g., Al/Plastic), 2nd row = thickness of layer 2 (heavy materials, e.g., Pb), 3rd row = thickness of layer 3 (light materials)
+                        if (size >= 3) {
+                            for (let j = 0; j < size; j++) {
+                                // Layer 1 thickness (light materials: Al, Plastic, etc.)
+                                $(`.min-0-${j}`).val(1);    // thickness min
+                                $(`.max-0-${j}`).val(10);   // thickness max
+                                $(`.step-0-${j}`).val(0.5);
+                                
+                                // Layer 2 thickness (heavy materials: Pb, W, etc.)
+                                if (size > 1) {
+                                    $(`.min-1-${j}`).val(2);   // thickness min (heavier materials typically need more)
+                                    $(`.max-1-${j}`).val(15);  // thickness max
+                                    $(`.step-1-${j}`).val(0.5);
+                                }
+                                
+                                // Layer 3 thickness (light materials: Al, Plastic, etc.)
+                                if (size > 2) {
+                                    $(`.min-2-${j}`).val(1);   // thickness min
+                                    $(`.max-2-${j}`).val(10);  // thickness max
+                                    $(`.step-2-${j}`).val(0.5);
+                                }
+                            }
+                            
+                            // Clear other rows if they exist
+                            for (let i = 3; i < size; i++) {
+                                for (let j = 0; j < size; j++) {
+                                    $(`.min-${i}-${j}`).val(0);
+                                    $(`.max-${i}-${j}`).val(0);
+                                    $(`.step-${i}-${j}`).val(1);
+                                }
+                            }
+                            
+                            // Add constraints for 3-layer shield
+                            // Constraint 1: Total thickness should be within reasonable limits
+                            if ($('#constraintsContainer .constraint').length === 0) {
+                                $('#addConstraint').click();
+                                setTimeout(() => {
+                                    // Select all thickness cells (first 3 rows)
+                                    for (let i = 0; i < 3; i++) {
+                                        for (let j = 0; j < size; j++) {
+                                            $(`#constraint-0 .matrix-cell-item[data-cell="${i},${j}"]`).addClass('selected');
+                                        }
+                                    }
+                                    $('#constraint-0 .selected-cells-info .selected-count').text(3 * size);
+                                    $('#constraint-0 .constraint-type').val('sum_less');
+                                    $('#constraint-0 .constraint-value').val(30); // Max 30 cm total thickness
+                                }, 50);
+                            }
+                            
+                            // Constraint 2: Middle layer (heavy material) should have minimum thickness
+                            if ($('#constraintsContainer .constraint').length === 1) {
+                                $('#addConstraint').click();
+                                setTimeout(() => {
+                                    // Select second row (layer 2 - heavy materials)
+                                    for (let j = 0; j < size; j++) {
+                                        $(`#constraint-1 .matrix-cell-item[data-cell="1,${j}"]`).addClass('selected');
+                                    }
+                                    $('#constraint-1 .selected-cells-info .selected-count').text(size);
+                                    $('#constraint-1 .constraint-type').val('sum_greater');
+                                    $('#constraint-1 .constraint-value').val(2); // At least 2 cm for heavy layer
+                                }, 100);
+                            }
+                            
+                            // Constraint 3: Ensure each layer has some minimum presence
+                            if ($('#constraintsContainer .constraint').length === 2) {
+                                $('#addConstraint').click();
+                                setTimeout(() => {
+                                    // Select first row (layer 1 - light materials)
+                                    for (let j = 0; j < size; j++) {
+                                        $(`#constraint-2 .matrix-cell-item[data-cell="0,${j}"]`).addClass('selected');
+                                    }
+                                    $('#constraint-2 .selected-cells-info .selected-count').text(size);
+                                    $('#constraint-2 .constraint-type').val('sum_greater');
+                                    $('#constraint-2 .constraint-value').val(0.5); // At least 0.5 cm for light layer 1
+                                }, 150);
+                            }
+                            
+                            // Constraint 4: Third layer also needs minimum thickness
+                            if ($('#constraintsContainer .constraint').length === 3) {
+                                $('#addConstraint').click();
+                                setTimeout(() => {
+                                    // Select third row (layer 3 - light materials)
+                                    for (let j = 0; j < size; j++) {
+                                        $(`#constraint-3 .matrix-cell-item[data-cell="2,${j}"]`).addClass('selected');
+                                    }
+                                    $('#constraint-3 .selected-cells-info .selected-count').text(size);
+                                    $('#constraint-3 .constraint-type').val('sum_greater');
+                                    $('#constraint-3 .constraint-value').val(0.5); // At least 0.5 cm for light layer 3
+                                }, 200);
+                            }
+                        }
+                        break;
+                        
                     case 'spacecraft':
-                        // Spacecraft shield: 1st row = thickness (0.1-5 cm), 2nd row = Al percentage (40-80%), 3rd row = Li percentage (5-15%), 4th row = H percentage (10-20%)
+                        // Spacecraft shield: 1st row = thickness of outer layer (Aluminum, 0.5-3 cm), 2nd row = thickness of middle layer (Polyethylene/HDPE, 1-5 cm), 3rd row = thickness of inner layer (Aluminum, 0.5-2 cm)
                         for (let j = 0; j < size; j++) {
-                            $(`.min-0-${j}`).val(0.1);  // thickness min
-                            $(`.max-0-${j}`).val(5);    // thickness max
+                            // Outer Aluminum layer (primary protection against micrometeorites and light particles)
+                            $(`.min-0-${j}`).val(0.5);  // thickness min
+                            $(`.max-0-${j}`).val(3);    // thickness max
                             $(`.step-0-${j}`).val(0.1);
                             
                             if (size > 1) {
-                                $(`.min-1-${j}`).val(40);   // aluminum percentage min
-                                $(`.max-1-${j}`).val(80);   // aluminum percentage max
-                                $(`.step-1-${j}`).val(1);
+                                // Middle Polyethylene layer (neutron moderator, hydrogen-rich material)
+                                $(`.min-1-${j}`).val(1);   // polyethylene thickness min
+                                $(`.max-1-${j}`).val(5);   // polyethylene thickness max
+                                $(`.step-1-${j}`).val(0.1);
                             }
                             
                             if (size > 2) {
-                                $(`.min-2-${j}`).val(5);    // lithium percentage min
-                                $(`.max-2-${j}`).val(15);   // lithium percentage max
-                                $(`.step-2-${j}`).val(0.5);
-                            }
-                            
-                            if (size > 3) {
-                                $(`.min-3-${j}`).val(10);   // hydrogen percentage min
-                                $(`.max-3-${j}`).val(20);   // hydrogen percentage max
-                                $(`.step-3-${j}`).val(1);
+                                // Inner Aluminum layer (secondary protection and structural support)
+                                $(`.min-2-${j}`).val(0.5);   // inner aluminum thickness min
+                                $(`.max-2-${j}`).val(2);   // inner aluminum thickness max
+                                $(`.step-2-${j}`).val(0.1);
                             }
                         }
                         // Clear other rows if they exist
-                        for (let i = 4; i < size; i++) {
+                        for (let i = 3; i < size; i++) {
                             for (let j = 0; j < size; j++) {
                                 $(`.min-${i}-${j}`).val(0);
                                 $(`.max-${i}-${j}`).val(0);
@@ -1122,32 +1228,29 @@
                         break;
                         
                     case 'reactor':
-                        // Reactor shield: 1st row = thickness (10-100 cm), 2nd row = B percentage (5-15%), 3rd row = concrete percentage (80-90%), 4th row = steel percentage (5-10%)
+                        // Reactor shield: 1st row = thickness of inner layer (Steel, 5-20 cm), 2nd row = thickness of middle layer (Boron/Concrete, 10-30 cm), 3rd row = thickness of outer layer (Concrete, 20-50 cm)
                         for (let j = 0; j < size; j++) {
-                            $(`.min-0-${j}`).val(10);   // thickness min
-                            $(`.max-0-${j}`).val(100);  // thickness max
-                            $(`.step-0-${j}`).val(5);
+                            // Inner Steel layer (structural and gamma protection)
+                            $(`.min-0-${j}`).val(5);   // steel thickness min
+                            $(`.max-0-${j}`).val(20);  // steel thickness max
+                            $(`.step-0-${j}`).val(1);
                             
                             if (size > 1) {
-                                $(`.min-1-${j}`).val(5);    // boron percentage min
-                                $(`.max-1-${j}`).val(15);   // boron percentage max
-                                $(`.step-1-${j}`).val(0.5);
+                                // Middle Boron/Concrete layer (neutron absorption)
+                                $(`.min-1-${j}`).val(10);   // boron concrete thickness min
+                                $(`.max-1-${j}`).val(30);  // boron concrete thickness max
+                                $(`.step-1-${j}`).val(1);
                             }
                             
                             if (size > 2) {
-                                $(`.min-2-${j}`).val(80);   // concrete percentage min
-                                $(`.max-2-${j}`).val(90);   // concrete percentage max
+                                // Outer Concrete layer (final gamma and structural protection)
+                                $(`.min-2-${j}`).val(20);   // concrete thickness min
+                                $(`.max-2-${j}`).val(50);  // concrete thickness max
                                 $(`.step-2-${j}`).val(1);
-                            }
-                            
-                            if (size > 3) {
-                                $(`.min-3-${j}`).val(5);    // steel percentage min
-                                $(`.max-3-${j}`).val(10);   // steel percentage max
-                                $(`.step-3-${j}`).val(0.5);
                             }
                         }
                         // Clear other rows if they exist
-                        for (let i = 4; i < size; i++) {
+                        for (let i = 3; i < size; i++) {
                             for (let j = 0; j < size; j++) {
                                 $(`.min-${i}-${j}`).val(0);
                                 $(`.max-${i}-${j}`).val(0);
@@ -1181,6 +1284,10 @@
             
             $('#presetReactor').click(function() {
                 applyPreset('reactor');
+            });
+            
+            $('#presetThreeLayer').click(function() {
+                applyPreset('threeLayerShield');
             });
             
             // Add constraint
