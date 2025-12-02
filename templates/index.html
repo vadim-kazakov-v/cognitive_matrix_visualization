@@ -500,6 +500,77 @@
             font-size: 0.8rem;
         }
         
+        /* Switch styles */
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-secondary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Animated pulse effect on hover */
+        .switch:hover .slider {
+            box-shadow: 0 0 0 3px rgba(94, 155, 255, 0.3);
+        }
+
+        /* Animation for switch toggle */
+        .switch input:checked + .slider:before {
+            animation: switchToggle 0.4s ease;
+        }
+
+        @keyframes switchToggle {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(13px); }
+            100% { transform: translateX(26px); }
+        }
+        
         .instructions {
             background-color: var(--bg-tertiary);
             padding: 20px;
@@ -650,6 +721,17 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label for="transposeMatrix" class="switch-label">
+                        <i class="fas fa-exchange-alt"></i> Transpose Matrix Before Analysis
+                        <div class="switch">
+                            <input type="checkbox" id="transposeMatrix">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
                     <label class="checkbox-label" for="useImaginary">
                         <input type="checkbox" id="useImaginary" value="true"> 
                         <i class="fas fa-calculator"></i> Include Imaginary Components
@@ -692,10 +774,6 @@
             </div>
         </div>
         
-        <footer>
-            <p>Matrix Eigenvalue Visualizer &copy; 2025 | Advanced Constraint-Based Matrix Analysis</p>
-        </footer>
-        
         <!-- Modal for displaying matrices -->
         <div id="matrixModal" class="modal">
             <div class="modal-content">
@@ -730,6 +808,11 @@
                 </div>
             </div>
         </div>
+        
+
+        <footer>
+            <p>Matrix Eigenvalue Visualizer &copy; 2025 | Advanced Constraint-Based Matrix Analysis</p>
+        </footer>
     </div>
 
     <script>
