@@ -102,6 +102,13 @@
             font-weight: 500;
         }
         
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
         input, select {
             width: 100%;
             padding: 12px;
@@ -549,7 +556,7 @@
                     <input type="number" id="matrixSize" min="1" max="10" value="2">
                 </div>
                 <div class="form-group">
-                    <label>&nbsp;</label>
+                    <label>&nbsp;</label> <!-- Maintain label spacing -->
                     <button id="generateMatrixForm">
                         <i class="fas fa-cogs"></i> Generate Matrix Form
                     </button>
@@ -563,9 +570,13 @@
         
         <div class="form-section">
             <h2><i class="fas fa-balance-scale"></i> Constraints</h2>
-            <button id="addConstraint">
-                <i class="fas fa-plus-circle"></i> Add Constraint
-            </button>
+            <div class="form-row">
+                <div class="form-group">
+                    <button id="addConstraint">
+                        <i class="fas fa-plus-circle"></i> Add Constraint
+                    </button>
+                </div>
+            </div>
             <div id="constraintsContainer">
                 <!-- Constraints will be added here -->
             </div>
@@ -615,14 +626,13 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="useImaginary">
+                    <label class="checkbox-label" for="useImaginary">
                         <input type="checkbox" id="useImaginary" value="true"> 
                         <i class="fas fa-calculator"></i> Include Imaginary Components
                     </label>
                 </div>
-            </div>
-            <div class="form-row">
                 <div class="form-group">
+                    <label>&nbsp;</label> <!-- Maintain spacing for alignment -->
                     <button id="generate" class="generate-btn">
                         <i class="fas fa-play-circle"></i> Generate and Visualize
                     </button>
@@ -677,18 +687,23 @@
         
         <!-- Config controls -->
         <div class="form-section config-controls">
-            <div class="form-group">
-                <label for="configName"><i class="fas fa-file-import"></i> Configuration Name</label>
-                <input type="text" id="configName" placeholder="Enter configuration name">
-            </div>
-            <div class="form-group">
-                <button id="saveConfig">
-                    <i class="fas fa-save"></i> Save Configuration
-                </button>
-                <button id="loadConfig">
-                    <i class="fas fa-folder-open"></i> Load Configuration
-                </button>
-                <input type="file" id="configFile" style="display: none;" accept=".json">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="configName"><i class="fas fa-file-import"></i> Configuration Name</label>
+                    <input type="text" id="configName" placeholder="Enter configuration name">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label> <!-- Maintain alignment -->
+                    <div style="display: flex; gap: 10px;">
+                        <button id="saveConfig">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                        <button id="loadConfig">
+                            <i class="fas fa-folder-open"></i> Load Configuration
+                        </button>
+                    </div>
+                    <input type="file" id="configFile" style="display: none;" accept=".json">
+                </div>
             </div>
         </div>
     </div>
