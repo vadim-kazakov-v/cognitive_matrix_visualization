@@ -17,12 +17,12 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def check_constraints(matrix, constraints):
     """Check if a matrix satisfies all constraints"""
-    logger.info(f"Checking constraints for matrix of size {matrix.shape}")
+    logger.info(f"Checking {len(constraints)} constraints for matrix of size {matrix.shape}")
     for i, constraint in enumerate(constraints):
         cells = constraint['cells']
         constraint_type = constraint['type']
@@ -84,6 +84,10 @@ def calculate_max_matrices(size, cell_ranges):
 def calculate_max_matrices_endpoint():
     try:
         data = request.json
+        logger.info(f"Calculate max matrices request received with parameters: size={data['size']}")
+        logger.debug(f"Calculate max matrices request cell_ranges: {data['cell_ranges']}")
+        logger.debug(f"Calculate max matrices request constraints: {data.get('constraints', [])}")
+        
         size = data['size']
         cell_ranges = data['cell_ranges']
         constraints = data.get('constraints', [])
@@ -107,6 +111,10 @@ def calculate_max_matrices_endpoint():
 def generate_matrices():
     try:
         data = request.json
+        logger.info(f"Analysis request received with parameters: size={data['size']}, num_matrices={data['num_matrices']}, dimensionality={data['dimensionality']}, eigenvector_selection={data.get('eigenvector_selection', 'all')}, algorithm={data.get('algorithm', 'tsne')}, input_type={data.get('input_type', 'eigenvalues')}, use_imaginary={data.get('use_imaginary', False)}, transpose_matrix={data.get('transpose_matrix', False)}")
+        logger.debug(f"Analysis request cell_ranges: {data['cell_ranges']}")
+        logger.debug(f"Analysis request constraints: {data['constraints']}")
+        
         size = data['size']
         num_matrices = data['num_matrices']
         dimensionality = data['dimensionality']
@@ -125,7 +133,7 @@ def generate_matrices():
             logger.warning(error_msg)
             return jsonify({'error': error_msg}), 400
         
-        logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints, eigenvector selection: {eigenvector_selection}")
+        logger.info(f"Generating {num_matrices} matrices of size {size}x{size} with {len(constraints)} constraints, eigenvector selection: {eigenvector_selection}, algorithm: {algorithm}, input_type: {input_type}")
         
         # Generate matrices based on cell ranges and constraints
         valid_matrices = []
@@ -134,6 +142,9 @@ def generate_matrices():
         
         attempts = 0
         max_attempts = num_matrices * 10  # Limit attempts to prevent infinite loop
+        
+        logger.info(f"Starting matrix generation with cell_ranges: {cell_ranges}")
+        logger.info(f"Applying constraints: {constraints}")
         
         while len(valid_matrices) < num_matrices and attempts < max_attempts:
             # Create a new matrix
@@ -255,18 +266,25 @@ def generate_matrices():
         
         feature_vectors = np.array(feature_vectors)
         
+        logger.info(f"Feature vectors shape: {feature_vectors.shape}, ready for dimensionality reduction using {algorithm}")
+        
         # Apply dimensionality reduction algorithm based on selection
         if len(valid_matrices) == 1:
             # If there's only one matrix, create coordinates manually
             coords = np.array([[0] * dimensionality])  # Single point at origin
+            logger.info("Only one matrix generated, using origin coordinates")
         else:
             if algorithm == 'umap':
+                logger.info(f"Applying UMAP dimensionality reduction with {dimensionality} components")
                 reducer = umap.UMAP(n_components=dimensionality, random_state=42)
                 coords = reducer.fit_transform(feature_vectors)
             else:  # algorithm == 'tsne' (default)
                 perplexity_val = min(30, max(1, len(valid_matrices)-1))  # Ensure perplexity is at least 1 and less than n_samples
+                logger.info(f"Applying t-SNE dimensionality reduction with {dimensionality} components and perplexity {perplexity_val}")
                 tsne = TSNE(n_components=dimensionality, random_state=42, perplexity=perplexity_val)
                 coords = tsne.fit_transform(feature_vectors)
+        
+        logger.info(f"Dimensionality reduction completed. Output coordinates shape: {coords.shape}")
         
         # Convert to list for JSON serialization
         coords_list = coords.tolist()
@@ -274,7 +292,7 @@ def generate_matrices():
         # Convert matrices to lists for JSON serialization
         matrices_list = [matrix.tolist() for matrix in valid_matrices]
         
-        logger.info("Successfully completed matrix generation and visualization processing")
+        logger.info(f"Analysis completed successfully. Generated {len(coords_list)} coordinate points, {len(eigenvalues_list)} eigenvalue sets, {len(matrices_list)} matrices, and {len(eigenvectors_list)} eigenvector sets")
         
         return jsonify({
             'coordinates': coords_list,
@@ -287,4 +305,5 @@ def generate_matrices():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    logger.info("Starting Radiation Protection Shield Analyzer server on port 5000")
     app.run(debug=True, host='0.0.0.0', port=5000)
