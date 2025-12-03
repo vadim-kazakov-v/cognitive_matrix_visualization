@@ -1,8 +1,6 @@
-```
 # Compiled Python files
 *.pyc
 __pycache__/
 
 # Test files (if they contain sensitive data or are auto-generated)
 *.py~test*
-```

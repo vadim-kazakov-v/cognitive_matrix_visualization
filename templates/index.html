@@ -857,14 +857,18 @@
                 }
                 
                 // Make an AJAX request to the backend to calculate max possible matrices
+                const requestData = {
+                    size: size,
+                    cell_ranges: cellRanges
+                };
+                
+                console.log("Calculate max matrices request being sent:", requestData);
+                
                 $.ajax({
                     url: '/calculate_max_matrices',
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        size: size,
-                        cell_ranges: cellRanges
-                    }),
+                    data: JSON.stringify(requestData),
                     success: function(response) {
                         const maxPossible = response.max_possible;
                         const currentNumMatrices = parseInt($('#numMatrices').val());
@@ -1419,6 +1423,8 @@
                     use_imaginary: $('#useImaginary').is(':checked'),
                     transpose_matrix: $('#transposeMatrix').is(':checked')
                 };
+                
+                console.log("Analysis request being sent:", data);
                 
                 // Show loading state
                 const generateBtn = $('#generate');
