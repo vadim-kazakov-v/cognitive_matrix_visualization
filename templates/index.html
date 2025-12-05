@@ -1443,6 +1443,13 @@
                         const matrices = response.matrices; // Get the original matrices
                         const eigenvectors = response.eigenvectors; // Get the eigenvectors
                         
+                        // Check if we have valid data to plot
+                        if (!coords || coords.length === 0) {
+                            // Clear the plot and show an error message
+                            $('#plot').html('<div style="display: flex; justify-content: center; align-items: center; height: 700px; text-align: center; color: var(--text-secondary);">Error: No diagram to display. No valid coordinates were generated.</div>');
+                            return;
+                        }
+                        
                         // Store the results in global variables for saving
                         globalCoords = coords;
                         globalEigenvalues = eigenvalues;
@@ -1679,7 +1686,15 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        alert('Error: ' + xhr.responseJSON.error);
+                        console.error('Generation error:', xhr, status, error);
+                        // Show a more descriptive error in the plot area
+                        let errorMessage = 'Error: ';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage += xhr.responseJSON.error;
+                        } else {
+                            errorMessage += error || status || 'Unknown error occurred';
+                        }
+                        $('#plot').html('<div style="display: flex; justify-content: center; align-items: center; height: 700px; text-align: center; color: var(--danger); padding: 20px;"><div><i class="fas fa-exclamation-triangle" style="font-size: 3em; margin-bottom: 15px; display: block;"></i><h3>Error generating diagram</h3><p>' + errorMessage + '</p></div></div>');
                     },
                     complete: function() {
                         // Reset button state

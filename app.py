@@ -210,7 +210,10 @@ def generate_matrices():
         logger.info(f"Generated {len(valid_matrices)} valid matrices out of {attempts} attempts")
         
         if len(valid_matrices) < num_matrices:
-            error_msg = f'Could only generate {len(valid_matrices)} out of {num_matrices} requested matrices. Try adjusting constraints or ranges.'
+            if len(valid_matrices) == 0:
+                error_msg = f'Could not generate any valid matrices that satisfy the given constraints. The constraints may be too restrictive or impossible to satisfy. Try adjusting constraints or ranges.'
+            else:
+                error_msg = f'Could only generate {len(valid_matrices)} out of {num_matrices} requested matrices. Try adjusting constraints or ranges.'
             logger.warning(error_msg)
             return jsonify({'error': error_msg}), 400
         
